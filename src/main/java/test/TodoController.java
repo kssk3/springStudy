@@ -1,5 +1,6 @@
 package test;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class TodoController {
 
     // 생성 : POST /api/todos
     @PostMapping
-    public ResponseEntity<Long> create(@RequestBody TodoCreateRequest request) {
+    public ResponseEntity<Long> create(@Valid @RequestBody TodoCreateRequest request) {
         Long todo = todoService.createTodo(request.getTitle(), request.getDescription());
         return ResponseEntity.ok(todo);
     }
