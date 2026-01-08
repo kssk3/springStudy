@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo 리스트 테스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .todo-list {
+            list-style: none;
+        }
+
+        .todo-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .todo-item:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .todo-item.completed {
+            background: #f0f9ff;
+            border-color: #4ade80;
+        }
+
+        .todo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .todo-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .todo-item.completed .todo-title {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        .todo-id {
+            background: #667eea;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+
+        .todo-description {
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .todo-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .todo-date {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-complete {
+            background: #4ade80;
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .btn-refresh {
+            background: #06b6d4;
+            margin-bottom: 20px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .todo-item {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📝 Todo 리스트</h1>
+        <p>Spring Boot REST API 테스트 페이지</p>
+    </div>
+
+    <div class="content">
+        <!-- Todo 생성 폼 -->
+        <div class="form-section">
+            <h2>✨ 새로운 Todo 추가</h2>
+            <form id="todoForm">
+                <div class="form-group">
+                    <label for="title">제목 *</label>
+                    <input type="text" id="title" name="title" required placeholder="할 일을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label for="description">설명</label>
+                    <textarea id="description" name="description" placeholder="상세 설명을 입력하세요 (선택사항)"></textarea>
+                </div>
+                <button type="submit">추가하기</button>
+            </form>
+        </div>
+
+        <!-- Todo 리스트 -->
+        <div class="list-section">
+            <h2>📋 Todo 목록</h2>
+            <button class="btn-refresh" onclick="loadTodos()">🔄 새로고침</button>
+            <ul id="todoList" class="todo-list"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE_URL = '/api/todos';
+
+    // 페이지 로드 시 Todo 목록 불러오기
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTodos();
+    });
+
+    // Todo 생성 폼 제출
+    document.getElementById('todoForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const title = document.getElementById('title').value.trim();
+        const description = document.getElementById('description').value.trim();
+
+        if (!title) {
+            alert('제목을 입력해주세요!');
+            return;
+        }
+
+        try {
+            const response = await fetch(API_BASE_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, description })
+            });
+
+            if (response.ok) {
+                const todoId = await response.json();
+                alert(`Todo가 생성되었습니다! (ID: ${todoId})`);
+                document.getElementById('todoForm').reset();
+                loadTodos();
+            } else {
+                const error = await response.json();
+                alert(`에러 발생: ${error.message || '알 수 없는 오류'}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버와 통신 중 오류가 발생했습니다.');
+        }
+    });
+
+    // Todo 목록 불러오기
+    async function loadTodos() {
+        try {
+            const response = await fetch(API_BASE_URL);
+            if (!response.ok) {
+                throw new Error('Failed to fetch todos');
+            }
+
+            const todos = await response.json();
+            displayTodos(todos);
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('todoList').innerHTML =
+                '<div class="empty-state"><h3>⚠️ 데이터를 불러올 수 없습니다</h3><p>서버가 실행 중인지 확인해주세요.</p></div>';
+        }
+    }
+
+    // Todo 목록 화면에 표시
+    function displayTodos(todos) {
+        const todoList = document.getElementById('todoList');
+
+        if (todos.length === 0) {
+            todoList.innerHTML =
+                '<div class="empty-state"><h3>📭 등록된 Todo가 없습니다</h3><p>위 폼에서 새로운 Todo를 추가해보세요!</p></div>';
+            return;
+        }
+
+        todoList.innerHTML = todos.map(todo => `
+                <li class="todo-item ${todo.completed ? 'completed' : ''}">
+                    <div class="todo-header">
+                        <div class="todo-title">
+                            ${escapeHtml(todo.title)}
+                        </div>
+                        <span class="todo-id">#${todo.id}</span>
+                    </div>
+                    ${todo.description ? `<div class="todo-description">${escapeHtml(todo.description)}</div>` : ''}
+                    <div class="todo-meta">
+                        <div>
+                            <span class="status-badge ${todo.completed ? 'status-completed' : 'status-pending'}">
+                                ${todo.completed ? '✓ 완료' : '⏳ 진행중'}
+                            </span>
+                            <span class="todo-date">생성: ${formatDate(todo.createdAt)}</span>
+                        </div>
+                        <div class="todo-actions">
+                            ${!todo.completed ? `<button class="btn-complete" onclick="completeTodo(${todo.id})">완료</button>` : ''}
+                            <button class="btn-delete" onclick="deleteTodo(${todo.id})">삭제</button>
+                        </div>
+                    </div>
+                </li>
+            `).join('');
+    }
+
+    // Todo 완료 처리
+    async function completeTodo(id) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/${id}/complete`, {
+                method: 'PATCH'
+            });
+
+            if (response.ok) {
+                loadTodos();
+            } else {
+                alert('완료 처리 중 오류가 발생했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버와 통신 중 오류가 발생했습니다.');
+        }
+    }
+
+    // Todo 삭제
+    async function deleteTodo(id) {
+        if (!confirm('정말 이 Todo를 삭제하시겠습니까?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                loadTodos();
+            } else {
+                alert('삭제 중 오류가 발생했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버와 통신 중 오류가 발생했습니다.');
+        }
+    }
+
+    // HTML 이스케이프 (XSS 방지)
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // 날짜 포맷팅
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+</script>
+</body>
+</html>
