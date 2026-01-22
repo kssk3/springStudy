@@ -1,9 +1,13 @@
-HELP.md
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+
+# Crev generated files
+.crev-project.txt
+.crev-review.md
+.crev-config.yaml
 
 ### STS ###
 .apt_generated

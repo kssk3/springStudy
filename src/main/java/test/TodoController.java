@@ -21,14 +21,12 @@ public class TodoController {
 
     private final TodoService todoService;
 
-    // 생성 : POST /api/todos
     @PostMapping
     public ResponseEntity<Long> create(@Valid @RequestBody TodoCreateRequest request) {
         Long todo = todoService.createTodo(request.getTitle(), request.getDescription());
         return ResponseEntity.ok(todo);
     }
 
-    // 전체 조회: GET /api/todos
     @GetMapping
     public ResponseEntity<List<TodoResponse>> findAll() {
         List<Todo> todos = todoService.findAll();

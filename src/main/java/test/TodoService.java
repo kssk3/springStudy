@@ -12,7 +12,6 @@ public class TodoService {
 
     private final TodoRepository todoRepository;
 
-    // 생성
     @Transactional
     public Long createTodo(String title, String description) {
         Todo todo = new Todo(title, description);

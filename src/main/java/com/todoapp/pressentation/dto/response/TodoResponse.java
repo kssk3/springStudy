@@ -1,6 +1,7 @@
-package test;
+package com.todoapp.pressentation.dto.response;
 
-import java.time.LocalDateTime;
+import com.todoapp.domain.Todo;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,7 +13,7 @@ public class TodoResponse {
     private String title;
     private String description;
     private boolean completed;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     public static TodoResponse from(Todo todo) {
         return new TodoResponse(

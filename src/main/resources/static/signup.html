@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1em;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        label .required {
+            color: #ef4444;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-hint {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        button[type="submit"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .link-section {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .link-section a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .link-section a:hover {
+            text-decoration: underline;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .server-error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .server-error.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>👤 회원가입</h1>
+        <p>Todo App에 오신 것을 환영합니다</p>
+    </div>
+
+    <div class="content">
+        <div id="successMessage" class="success-message"></div>
+        <div id="serverError" class="server-error"></div>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="email">이메일 <span class="required">*</span></label>
+                <input type="email" id="email" name="email" required placeholder="example@email.com">
+                <div class="input-hint">유효한 이메일 주소를 입력해주세요</div>
+                <div id="emailError" class="error-message"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">비밀번호 <span class="required">*</span></label>
+                <input type="password" id="password" name="password" required placeholder="비밀번호 (8-20자)">
+                <div class="input-hint">8자 이상 20자 이하로 입력해주세요</div>
+                <div id="passwordError" class="error-message"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="passwordConfirm">비밀번호 확인 <span class="required">*</span></label>
+                <input type="password" id="passwordConfirm" name="passwordConfirm" required placeholder="비밀번호 확인">
+                <div id="passwordConfirmError" class="error-message"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="name">이름 <span class="required">*</span></label>
+                <input type="text" id="name" name="name" required placeholder="홍길동">
+                <div class="input-hint">2자 이상 10자 이하로 입력해주세요</div>
+                <div id="nameError" class="error-message"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="phoneNumber">전화번호 <span class="required">*</span></label>
+                <input type="tel" id="phoneNumber" name="phoneNumber" required placeholder="010-1234-5678">
+                <div class="input-hint">형식: 010-1234-5678</div>
+                <div id="phoneNumberError" class="error-message"></div>
+            </div>
+
+            <button type="submit">회원가입</button>
+        </form>
+
+        <div class="link-section">
+            <p>이미 계정이 있으신가요? <a href="/index.html">Todo 페이지로 이동</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = '/api/auth/signup';
+
+    // 폼 제출 처리
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 이전 에러 메시지 초기화
+        clearErrors();
+        hideMessages();
+
+        // 폼 데이터 수집
+        const formData = {
+            email: document.getElementById('email').value.trim(),
+            password: document.getElementById('password').value,
+            passwordConfirm: document.getElementById('passwordConfirm').value,
+            name: document.getElementById('name').value.trim(),
+            phoneNumber: document.getElementById('phoneNumber').value.trim()
+        };
+
+        // 클라이언트 측 검증
+        if (!validateForm(formData)) {
+            return;
+        }
+
+        // 버튼 비활성화
+        const submitButton = document.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = '처리 중...';
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // 성공
+                showSuccess(`${data.message} (ID: ${data.id})`);
+                document.getElementById('signupForm').reset();
+
+                // 3초 후 Todo 페이지로 이동
+                setTimeout(() => {
+                    window.location.href = '/index.html';
+                }, 3000);
+            } else {
+                // 에러 처리
+                handleServerError(data);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showServerError('서버와 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        } finally {
+            // 버튼 활성화
+            submitButton.disabled = false;
+            submitButton.textContent = '회원가입';
+        }
+    });
+
+    // 클라이언트 측 검증
+    function validateForm(data) {
+        let isValid = true;
+
+        // 이메일 검증
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(data.email)) {
+            showError('emailError', '올바른 이메일 형식이 아닙니다.');
+            isValid = false;
+        }
+
+        // 비밀번호 검증
+        if (data.password.length < 8 || data.password.length > 20) {
+            showError('passwordError', '비밀번호는 8자 이상 20자 이하여야 합니다.');
+            isValid = false;
+        }
+
+        // 비밀번호 확인 검증
+        if (data.password !== data.passwordConfirm) {
+            showError('passwordConfirmError', '비밀번호가 일치하지 않습니다.');
+            isValid = false;
+        }
+
+        // 이름 검증
+        if (data.name.length < 2 || data.name.length > 10) {
+            showError('nameError', '이름은 2자 이상 10자 이하여야 합니다.');
+            isValid = false;
+        }
+
+        // 전화번호 검증
+        const phoneRegex = /^01[0-9]-[0-9]{4}-[0-9]{4}$/;
+        if (!phoneRegex.test(data.phoneNumber)) {
+            showError('phoneNumberError', '전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)');
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // 서버 에러 처리
+    function handleServerError(data) {
+        if (data.code === 'VALIDATION_FAILED' && data.errors) {
+            // 필드별 에러 표시
+            Object.keys(data.errors).forEach(field => {
+                if (field === 'global') {
+                    // 클래스 레벨 검증 에러 (매핑되지 않은 경우)
+                    showServerError(data.errors[field]);
+                } else {
+                    // 필드별 에러
+                    const errorId = field + 'Error';
+                    showError(errorId, data.errors[field]);
+                }
+            });
+        } else if (data.code === 'DUPLICATE_EMAIL') {
+            showError('emailError', data.message);
+        } else {
+            showServerError(data.message || '회원가입 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 에러 메시지 표시
+    function showError(elementId, message) {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.classList.add('show');
+        }
+    }
+
+    // 성공 메시지 표시
+    function showSuccess(message) {
+        const successElement = document.getElementById('successMessage');
+        successElement.textContent = '✅ ' + message + ' 잠시 후 Todo 페이지로 이동합니다...';
+        successElement.classList.add('show');
+    }
+
+    // 서버 에러 메시지 표시
+    function showServerError(message) {
+        const errorElement = document.getElementById('serverError');
+        errorElement.textContent = '❌ ' + message;
+        errorElement.classList.add('show');
+    }
+
+    // 에러 메시지 초기화
+    function clearErrors() {
+        document.querySelectorAll('.error-message').forEach(el => {
+            el.classList.remove('show');
+            el.textContent = '';
+        });
+    }
+
+    // 메시지 숨기기
+    function hideMessages() {
+        document.getElementById('successMessage').classList.remove('show');
+        document.getElementById('serverError').classList.remove('show');
+    }
+
+    // 실시간 전화번호 포맷팅
+    document.getElementById('phoneNumber').addEventListener('input', (e) => {
+        let value = e.target.value.replace(/[^0-9]/g, '');
+
+        if (value.length > 3 && value.length <= 7) {
+            value = value.slice(0, 3) + '-' + value.slice(3);
+        } else if (value.length > 7) {
+            value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+        }
+
+        e.target.value = value;
+    });
+</script>
+</body>
+</html>

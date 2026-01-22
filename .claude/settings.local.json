@@ -3,7 +3,9 @@
     "allow": [
       "Bash(test:*)",
       "Bash(tree:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nPhase 1.1: 비밀번호 암호화 설정 완료\n\n- build.gradle에 spring-security-crypto 의존성 추가\n- PasswordEncoderConfig에 BCryptPasswordEncoder Bean 등록\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)"
     ]
   }
 }
