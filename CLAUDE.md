@@ -95,3 +95,11 @@ When writing code, follow these principles:
 3. **Explainable Code** - Write code that can answer "why did you do it this way?" in a code review. Every design decision should be justifiable.
 
 4. **Fail Fast** - Validate early and throw meaningful exceptions. Silent failures (like `deleteById` ignoring non-existent IDs) should be avoided.
+
+5. **No Hardcoding** - If a value is defined in an enum, constant, or config, always use that reference. Never duplicate values as string literals or magic numbers.
+
+6. **Avoid Unnecessary Operations** - Check conditions before executing loops or operations. Use `hasFieldErrors()` before iterating field errors, check `isEmpty()` before processing collections.
+
+7. **Extract Repeated Calls** - If calling the same method multiple times (e.g., `e.getBindingResult()`), extract it to a local variable.
+
+8. **Production-Ready from Start** - Write code as if it will be deployed immediately. No "quick fix now, improve later" mindset.

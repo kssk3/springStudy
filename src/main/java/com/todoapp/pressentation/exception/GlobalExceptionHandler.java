@@ -5,8 +5,8 @@ import com.todoapp.common.exception.ErrorCode;
 import com.todoapp.pressentation.dto.response.ErrorResponse;
 import java.util.HashMap;
 import java.util.Map;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -14,22 +14,30 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String VALIDATION_ERROR_CODE = "C001";
+    private static final String VALIDATION_ERROR_MESSAGE = "입력값 검증에 실패했습니다.";
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
         Map<String, String> errors = new HashMap<>();
+        BindingResult bindingResult = e.getBindingResult();
 
-        e.getBindingResult().getFieldErrors().forEach(error ->
-            errors.put(error.getField(), error.getDefaultMessage())
-        );
+        if (bindingResult.hasFieldErrors()) {
+            bindingResult.getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage())
+            );
+        }
 
-        e.getBindingResult().getGlobalErrors().forEach(error ->
-            errors.put(error.getObjectName(), error.getDefaultMessage())
-        );
+        if (bindingResult.hasGlobalErrors()) {
+            bindingResult.getGlobalErrors().forEach(error ->
+                errors.put(error.getObjectName(), error.getDefaultMessage())
+            );
+        }
 
         ErrorCode errorCode = ErrorCode.INVALID_INPUT_VALUE;
         return ResponseEntity
                 .status(errorCode.getStatus())
-                .body(ErrorResponse.of("C001", "입력값 검증에 실패했습니다.", errors));
+                .body(ErrorResponse.of(VALIDATION_ERROR_CODE, VALIDATION_ERROR_MESSAGE, errors));
     }
 
     @ExceptionHandler(BusinessException.class)
@@ -42,9 +50,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException e) {
+        ErrorCode errorCode = ErrorCode.TODO_NOT_FOUND;
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponse.of("C002", e.getMessage(), null));
+                .status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode.getCode(), e.getMessage(), null));
     }
 
     @ExceptionHandler(Exception.class)
