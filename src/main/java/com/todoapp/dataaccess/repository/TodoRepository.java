@@ -1,6 +1,6 @@
-package com.todoapp.implement.repository;
+package com.todoapp.dataaccess.repository;
 
-import com.todoapp.domain.Todo;
+import com.todoapp.dataaccess.entity.Todo;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

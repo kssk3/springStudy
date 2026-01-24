@@ -1,4 +1,4 @@
-package com.todoapp.common.config;
+package com.todoapp.dataaccess.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -83,3 +83,15 @@ URL: `http://localhost:8080/h2-console`
 
 **Auth API**:
 - `POST /api/auth/signup` - User registration
+
+## Code Writing Principles
+
+When writing code, follow these principles:
+
+1. **Consistency** - Use the same patterns across similar methods within a class. If one method validates existence before operating, all similar methods should do the same.
+
+2. **Defensive Programming** - Always handle edge cases: non-existent resources, invalid inputs, null values. Never assume the happy path.
+
+3. **Explainable Code** - Write code that can answer "why did you do it this way?" in a code review. Every design decision should be justifiable.
+
+4. **Fail Fast** - Validate early and throw meaningful exceptions. Silent failures (like `deleteById` ignoring non-existent IDs) should be avoided.

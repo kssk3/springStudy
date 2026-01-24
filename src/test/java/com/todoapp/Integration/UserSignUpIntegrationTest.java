@@ -2,10 +2,9 @@ package com.todoapp;
 
 import static org.assertj.core.api.Assertions.*;
 
-import com.todoapp.domain.User;
+import com.todoapp.dataaccess.entity.User;
 import com.todoapp.pressentation.dto.request.SignUpRequest;
-import com.todoapp.common.exception.DuplicateEmailException;
-import com.todoapp.implement.repository.UserRepository;
+import com.todoapp.dataaccess.repository.UserRepository;
 import com.todoapp.business.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,9 +33,9 @@ class UserSignUpIntegrationTest {
                 .phoneNumber("010-1234-1234")
                 .build();
 
-        Long userId = userService.signUp(request);
+        User user = userService.signUp(request);
 
-        User savedUser = userRepository.findById(userId).orElseThrow();
+        User savedUser = userRepository.findById(user.getId()).orElseThrow();
         assertThat(savedUser.getName()).isEqualTo("강두기");
         assertThat(savedUser.getEmail()).isEqualTo("test123@gmail.com");
 
@@ -66,7 +65,7 @@ class UserSignUpIntegrationTest {
                 .build();
 
         assertThatThrownBy(() -> userService.signUp(second))
-                .isInstanceOf(DuplicateEmailException.class);
+                .isInstanceOf(IllegalArgumentException.class);
 
         assertThat(userRepository.count()).isEqualTo(1);
     }

@@ -2,10 +2,10 @@ package com.todoapp;
 
 import static org.assertj.core.api.Assertions.*;
 
-import com.todoapp.domain.Todo;
+import com.todoapp.dataaccess.entity.Todo;
 import com.todoapp.pressentation.dto.request.TodoCreateRequest;
 import com.todoapp.pressentation.dto.response.TodoResponse;
-import com.todoapp.implement.repository.TodoRepository;
+import com.todoapp.dataaccess.repository.TodoRepository;
 import com.todoapp.business.service.TodoService;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;

@@ -1,4 +1,4 @@
-package com.todoapp.domain;
+package com.todoapp.dataaccess.entity;
 
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;

@@ -6,19 +6,18 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class SignUpResponse {
-
+public class LoginResponse {
     private Long id;
     private String email;
     private String name;
     private String message;
 
-    public static SignUpResponse from(User user) {
-        return new SignUpResponse(
+    public static LoginResponse of(User user) {
+        return new LoginResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getName(),
-                "회원가입이 완료되었습니다."
+                "로그인에 성공했습니다."
         );
     }
 }

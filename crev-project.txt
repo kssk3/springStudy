@@ -1,4 +1,5 @@
 Project Directory Structure:
+├── ARCHITECTURE.md
 ├── CLAUDE.md
 ├── HELP.md
 ├── SPRING_LEARNING_CURRICULUM.md
@@ -10,40 +11,44 @@ Project Directory Structure:
 │   │   │   ├── com
 │   │   │   │   ├── todoapp
 │   │   │   │   │   ├── Application.java
-│   │   │   │   │   ├── config
-│   │   │   │   │   │   └── PasswordEncoderConfig.java
-│   │   │   │   │   ├── controller
-│   │   │   │   │   │   ├── AuthController.java
-│   │   │   │   │   │   └── TodoController.java
-│   │   │   │   │   ├── domain
-│   │   │   │   │   │   ├── BaseEntity.java
-│   │   │   │   │   │   ├── BaseTimeEntity.java
-│   │   │   │   │   │   ├── Todo.java
-│   │   │   │   │   │   └── User.java
-│   │   │   │   │   ├── dto
-│   │   │   │   │   │   ├── request
-│   │   │   │   │   │   │   ├── SignUpRequest.java
-│   │   │   │   │   │   │   └── TodoCreateRequest.java
-│   │   │   │   │   │   ├── response
-│   │   │   │   │   │   │   ├── SignUpResponse.java
-│   │   │   │   │   │   │   └── TodoResponse.java
-│   │   │   │   │   ├── exception
-│   │   │   │   │   │   ├── BusinessException.java
-│   │   │   │   │   │   ├── DuplicateEmailException.java
-│   │   │   │   │   │   ├── ErrorCode.java
-│   │   │   │   │   │   ├── ErrorResponse.java
-│   │   │   │   │   │   └── GlobalExceptionHandler.java
-│   │   │   │   │   ├── repository
-│   │   │   │   │   │   ├── TodoRepository.java
-│   │   │   │   │   │   └── UserRepository.java
-│   │   │   │   │   ├── service
-│   │   │   │   │   │   ├── TodoService.java
-│   │   │   │   │   │   └── UserService.java
-│   │   │   │   │   ├── validation
-│   │   │   │   │   │   ├── Password.java
-│   │   │   │   │   │   ├── PasswordMatch.java
-│   │   │   │   │   │   ├── PasswordMatchValidator.java
-│   │   │   │   │   │   └── StrongPasswordValidator.java
+│   │   │   │   │   ├── business
+│   │   │   │   │   │   ├── service
+│   │   │   │   │   │   │   ├── TodoService.java
+│   │   │   │   │   │   │   └── UserService.java
+│   │   │   │   │   ├── common
+│   │   │   │   │   │   ├── exception
+│   │   │   │   │   │   │   ├── BusinessException.java
+│   │   │   │   │   │   │   ├── DuplicateEmailException.java
+│   │   │   │   │   │   │   └── ErrorCode.java
+│   │   │   │   │   ├── dataaccess
+│   │   │   │   │   │   ├── config
+│   │   │   │   │   │   │   └── PasswordEncoderConfig.java
+│   │   │   │   │   │   ├── entity
+│   │   │   │   │   │   │   ├── BaseEntity.java
+│   │   │   │   │   │   │   ├── BaseTimeEntity.java
+│   │   │   │   │   │   │   ├── Todo.java
+│   │   │   │   │   │   │   └── User.java
+│   │   │   │   │   │   ├── repository
+│   │   │   │   │   │   │   ├── TodoRepository.java
+│   │   │   │   │   │   │   └── UserRepository.java
+│   │   │   │   │   ├── implement
+│   │   │   │   │   │   ├── validator
+│   │   │   │   │   │   │   ├── PasswordMatch.java
+│   │   │   │   │   │   │   └── PasswordMatchValidator.java
+│   │   │   │   │   ├── presentation
+│   │   │   │   │   │   ├── controller
+│   │   │   │   │   │   │   ├── AuthController.java
+│   │   │   │   │   │   │   └── TodoController.java
+│   │   │   │   │   │   ├── dto
+│   │   │   │   │   │   │   ├── request
+│   │   │   │   │   │   │   │   ├── SignUpRequest.java
+│   │   │   │   │   │   │   │   └── TodoCreateRequest.java
+│   │   │   │   │   │   │   ├── response
+│   │   │   │   │   │   │   │   ├── ErrorResponse.java
+│   │   │   │   │   │   │   │   ├── SignUpResponse.java
+│   │   │   │   │   │   │   │   └── TodoResponse.java
+│   │   │   │   │   │   ├── exception
+│   │   │   │   │   │   │   └── GlobalExceptionHandler.java
 │   │   │   ├── test
 │   │   │   │   ├── Application.java
 │   │   │   │   ├── ErrorResponse.java
@@ -78,79 +83,168 @@ Project Directory Structure:
 
 
 File: 
+ARCHITECTURE.md
+Content: 
+ARCHITECTURE.md
+목표
+프로젝트가 커져도 유지보수와 확장이 가능하도록, 코드의 책임을 명확히 나누고 의존성 방향을 통제한다.
+
+특히 “비즈니스 흐름이 읽히는 코드”를 상위 레이어에 두고, DB/외부연동 등 기술 변화에 민감한 상세 구현은 하위 레이어로 격리한다.
+
+레이어 개요
+본 프로젝트는 아래 4개 레이어를 사용한다.
+
+* Presentation Layer
+* Business Layer
+* Implement Layer
+* Data Access Layer 
+Presentation Layer
+  외부로 “노출/요청/응답”을 담당한다.
+
+예: Controller, Request/Response DTO, API 스펙에 종속되는 검증/바인딩 코드.
+
+Business Layer
+유스케이스 중심으로 “비즈니스 흐름(단계)이 읽히는 코드”를 배치한다.
+
+예: 회원가입, 결제, 주문 생성처럼 작업의 큰 단계를 오케스트레이션하며, 상세 구현은 Implement/Data Access로 위임한다.
+
+Implement Layer
+Business가 위임한 “상세 구현 로직”을 담당한다.
+
+도메인 규칙을 적용하기 위한 도구/컴포넌트(검증, 조합, 계산, 정책, 변환 등)가 주로 위치하며, 프로젝트에서 클래스 수가 가장 많아지기 쉬운 레이어다.
+
+Data Access Layer
+DB/외부 시스템 접근을 담당한다.
+
+예: Repository/DAO, 외부 API client, 메시징/캐시/파일 등 인프라 접근 코드.
+
+의존성(참조) 규칙
+레이어의 목적은 “분리”보다 “통제”이며, 아래 규칙을 강제한다.
+
+* 의존성 방향은 위 → 아래만 허용한다. 
+* 하위 레이어는 상위 레이어를 참조하면 안 된다. 
+* 상위 레이어가 중간 레이어를 건너뛰어 하위 레이어를 직접 참조하면 안 된다. 
+* 같은 레이어끼리 참조는 원칙적으로 금지한다. 
+* 예외: Implement Layer는 협력/재사용을 위해 Implement 내부 상호 참조를 허용한다. 
+설계 의도(왜 이렇게 나누나)
+                                                                                                                           Service에 로직이 과도하게 몰리면 “비즈니스 흐름”이 사라지고, Repository/기술 세부사항을 너무 많이 알게 되어 변경에 취약해진다.
+
+그래서 Business는 “흐름”, Implement는 “상세 구현”, Data Access는 “기술 의존성”으로 책임을 나눠 변경 이유를 분리한다.
+
+패키지(또는 모듈) 가이드
+아래는 단일 모듈 기준의 패키지 예시다(멀티모듈이면 각 레이어를 모듈로 분리 가능).
+
+* ...presentation
+    * ...controller
+    * ...dto (request/response)
+* ...business
+    * ...usecase (또는 service)
+* ...implement
+    * ...policy, ...validator, ...processor, ...factory 등 “상세 구현 컴포넌트”
+* ...dataaccess
+    * ...repository (JPA 등)
+    * ...client (외부 API)
+    * ...config (인프라 설정) 
+모듈화(선택)
+      Data Access처럼 기술 의존성이 강한 영역은 별도 모듈로 분리하고, Gradle 의존성 설정에서 구현체가 상위로 전파되지 않도록 관리한다.
+
+기술 모듈 의존성이 상위로 새어나가면 상위 레이어가 특정 라이브러리/구현체를 직접 참조하게 되어 레이어 오염이 발생할 수 있다.
+
+코드 리뷰 체크리스트
+* 이 코드는 어느 레이어에 있어야 하는가? (외부 입출력/흐름/상세구현/데이터접근) 
+* 상위 레이어가 하위를 “건너뛰어” 참조하고 있지 않은가? 
+* Data Access/외부 연동 타입(JPA Entity/Repository/Client 등)이 Business에 노출되고 있지 않은가? 
+* Implement 내부 상호 참조가 과도해져 “새로운 거대한 레이어”가 되지 않았는가? 
+
+
+File: 
 CLAUDE.md
 Content: 
-Always follow the instructions in plan.md.
-
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Instruction Files
 
-Spring Boot 4.0.1 web application using Java 21, built with Gradle. This is a standard Spring MVC application with JPA persistence, Thymeleaf templating, and H2 database.
+Always follow the instructions in HELP.md (teaching/explanation style guidelines).
 
 ## Build & Run Commands
 
-### Build & Test
 ```bash
-./gradlew build          # Build the project
-./gradlew test           # Run all tests
-./gradlew clean build    # Clean build
-```
-
-### Run Application
-```bash
-./gradlew bootRun        # Start the Spring Boot application
-```
-
-### Development
-```bash
-./gradlew test --tests ClassName.methodName    # Run a specific test
-./gradlew test --tests ClassName               # Run all tests in a class
-./gradlew bootRun --args='--spring.profiles.active=dev'  # Run with profile
+./gradlew build                                    # Build the project
+./gradlew test                                     # Run all tests
+./gradlew clean build                              # Clean build
+./gradlew bootRun                                  # Start the application
+./gradlew test --tests ClassName.methodName        # Run a specific test
+./gradlew test --tests ClassName                   # Run all tests in a class
 ```
 
 ## Architecture
 
-**Package Structure**: All code resides in the `test` package (`src/main/java/test`). The codebase follows Spring Boot layered architecture:
-- **Controller**: `TodoController` - REST API endpoints for todo operations
-- **Service**: `TodoService` - Business logic layer
-- **Repository**: `TodoRepository` - JPA data access (extends `JpaRepository`)
-- **Entity**: `Todo` - JPA entity with Lombok annotations
-- **DTOs**: `TodoCreateRequest`, `TodoResponse` - Request/response objects
-- **Exception Handling**: `GlobalExceptionHandler` - Centralized `@RestControllerAdvice` for validation and error handling
+### Package Structure (com.todoapp)
 
-**Key Technologies**:
-- **Spring Boot 4.0.1**: Framework (requires Java 21)
-- **Spring Data JPA**: ORM and database access
-- **Thymeleaf**: Server-side templating
-- **H2 Database**: In-memory database (check `application.yml` for configuration)
-- **Lombok**: Automatic generation of getters, setters, constructors via annotations
-- **Jakarta Validation**: Bean validation with `@Valid` annotations
+```
+com.todoapp/
+├── business/service/      # Business logic (@Service, @Transactional)
+├── common/
+│   ├── config/            # Spring configurations (PasswordEncoderConfig)
+│   └── exception/         # ErrorCode enum, BusinessException
+├── domain/                # JPA entities (extend BaseTimeEntity)
+├── implement/repository/  # Spring Data JPA repositories
+├── pressentation/
+│   ├── controller/        # REST controllers (@RestController)
+│   ├── dto/request/       # Request DTOs with validation
+│   ├── dto/response/      # Response DTOs
+│   └── exception/         # GlobalExceptionHandler (@RestControllerAdvice)
+└── validation/            # Custom validators (PasswordMatch, etc.)
+```
 
-**Configuration**: `src/main/resources/application.yml` contains Spring configuration.
+### Entity Hierarchy
 
-**H2 Console**: Accessible at `http://localhost:8080/h2-console` when the application is running
+All entities extend `BaseTimeEntity` which provides:
+- `id` (from BaseEntity) - auto-generated Long
+- `createdDate`, `updatedDate` (from BaseTimeEntity) - JPA auditing with Instant
+
+### Exception Handling
+
+- `ErrorCode` enum defines all error codes with HttpStatus, code, and message
+- `BusinessException` wraps ErrorCode for business logic errors
+- `GlobalExceptionHandler` handles validation errors and business exceptions
+
+### Password Validation
+
+Uses regex pattern for validation:
+```java
+@Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,20}$")
+```
+Passwords are encrypted with BCryptPasswordEncoder.
+
+## Key Technologies
+
+- **Spring Boot 4.0.1** (Java 21)
+- **Spring Data JPA** with H2 in-memory database
+- **Jakarta Validation** for bean validation
+- **Lombok** for boilerplate reduction
+- **passay** for password validation rules
+
+## H2 Console
+
+URL: `http://localhost:8080/h2-console`
 - JDBC URL: `jdbc:h2:mem:testdb`
 - Username: `sa`
 - Password: (empty)
 
-**REST API Endpoints**: The application provides a Todo REST API at `/api/todos`:
-- `POST /api/todos` - Create a new todo (requires `title` and `description`)
+## REST API
+
+**Todo API** (`/api/todos`):
+- `POST /api/todos` - Create todo
 - `GET /api/todos` - Get all todos
-- `GET /api/todos/{id}` - Get a specific todo by ID
-- `PATCH /api/todos/{id}/complete` - Mark a todo as complete
-- `DELETE /api/todos/{id}` - Delete a todo
+- `GET /api/todos/{id}` - Get todo by ID
+- `PATCH /api/todos/{id}/complete` - Mark complete
+- `DELETE /api/todos/{id}` - Delete todo
 
-## Development Notes
-
-- Java 21 is required (configured via Gradle toolchain)
-- Lombok is configured; use annotations like `@Data`, `@Getter`, `@Setter`, `@AllArgsConstructor` to reduce boilerplate
-- H2 console is enabled in `application.yml` at `/h2-console` (useful for database inspection during development)
-- The project uses JUnit 5 (Jupiter) for testing
-- Validation is handled via `@Valid` annotations on request DTOs; `GlobalExceptionHandler` provides centralized error handling with structured error responses
-- JPA is configured with `ddl-auto: create` (recreates tables on startup) and `show-sql: true` for SQL logging
+**Auth API**:
+- `POST /api/auth/signup` - User registration
 
 
 File: 
@@ -608,9 +702,141 @@ public class Application {
 
 
 File: 
-src/main/java/com/todoapp/config/PasswordEncoderConfig.java
+src/main/java/com/todoapp/business/service/TodoService.java
 Content: 
-package com.todoapp.config;
+package com.todoapp.business.service;
+
+import com.todoapp.dataaccess.repository.TodoRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class TodoService {
+
+    private final TodoRepository todoRepository;
+
+}
+
+
+File: 
+src/main/java/com/todoapp/business/service/UserService.java
+Content: 
+package com.todoapp.business.service;
+
+import com.todoapp.dataaccess.entity.User;
+import com.todoapp.pressentation.dto.request.SignUpRequest;
+import com.todoapp.dataaccess.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Transactional
+    public User signUp(SignUpRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+
+        String encodePassword = passwordEncoder.encode(request.getPassword());
+
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(encodePassword)
+                .name(request.getName())
+                .phoneNumber(request.getPhoneNumber())
+                .build();
+
+        return userRepository.save(user);
+    }
+}
+
+
+File: 
+src/main/java/com/todoapp/common/exception/BusinessException.java
+Content: 
+package com.todoapp.common.exception;
+
+import lombok.Getter;
+
+@Getter
+public abstract class BusinessException extends RuntimeException {
+
+    private final ErrorCode errorCode;
+
+    protected BusinessException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
+    }
+
+    protected BusinessException(ErrorCode errorCode, String message) {
+        super(message);
+        this.errorCode = errorCode;
+    }
+}
+
+
+File: 
+src/main/java/com/todoapp/common/exception/DuplicateEmailException.java
+Content: 
+package com.todoapp.common.exception;
+
+public class DuplicateEmailException extends BusinessException {
+
+    public DuplicateEmailException() {
+        super(ErrorCode.DUPLICATE_EMAIL);
+    }
+
+    public DuplicateEmailException(String email) {
+        super(ErrorCode.DUPLICATE_EMAIL, "이미 사용 중인 이메일입니다: " + email);
+    }
+}
+
+
+File: 
+src/main/java/com/todoapp/common/exception/ErrorCode.java
+Content: 
+package com.todoapp.common.exception;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+
+@Getter
+@RequiredArgsConstructor
+public enum ErrorCode {
+    // 400 Bad Request
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "E001", "잘못된 입력값입니다."),
+
+    // 409 Conflict
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "E002", "이미 사용 중인 이메일입니다."),
+
+    // 404 Not Found
+    TODO_NOT_FOUND(HttpStatus.NOT_FOUND, "E003", "Todo 찾을 수 없습니다."),
+
+    // 500 Internal Server Error
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E999", "서버 오류가 발생했습니다.");
+
+    private final HttpStatus status;
+    private final String code;
+    private final String message;
+}
+
+
+File: 
+src/main/java/com/todoapp/dataaccess/config/PasswordEncoderConfig.java
+Content: 
+package com.todoapp.dataaccess.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -628,55 +854,9 @@ public class PasswordEncoderConfig {
 
 
 File: 
-src/main/java/com/todoapp/controller/AuthController.java
+src/main/java/com/todoapp/dataaccess/entity/BaseEntity.java
 Content: 
-package com.todoapp.controller;
-
-import com.todoapp.domain.User;
-import com.todoapp.dto.request.SignUpRequest;
-import com.todoapp.dto.response.SignUpResponse;
-import com.todoapp.service.UserService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-@RestController
-@RequestMapping("/api/auth")
-@RequiredArgsConstructor
-public class AuthController {
-
-    private final UserService userService;
-
-    @PostMapping("/signup")
-    public ResponseEntity<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest request) {
-        User user = userService.signUp(request);
-
-        SignUpResponse response = SignUpResponse.from(user);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
-    }
-}
-
-
-File: 
-src/main/java/com/todoapp/controller/TodoController.java
-Content: 
-package com.todoapp.controller;
-
-public class TodoController {
-}
-
-File: 
-src/main/java/com/todoapp/domain/BaseEntity.java
-Content: 
-package com.todoapp.domain;
+package com.todoapp.dataaccess.entity;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -695,9 +875,9 @@ public abstract class BaseEntity {
 
 
 File: 
-src/main/java/com/todoapp/domain/BaseTimeEntity.java
+src/main/java/com/todoapp/dataaccess/entity/BaseTimeEntity.java
 Content: 
-package com.todoapp.domain;
+package com.todoapp.dataaccess.entity;
 
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
@@ -721,9 +901,9 @@ public abstract class BaseTimeEntity extends BaseEntity {
 
 
 File: 
-src/main/java/com/todoapp/domain/Todo.java
+src/main/java/com/todoapp/dataaccess/entity/Todo.java
 Content: 
-package com.todoapp.domain;
+package com.todoapp.dataaccess.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -775,13 +955,14 @@ public class Todo extends BaseTimeEntity {
 
 
 File: 
-src/main/java/com/todoapp/domain/User.java
+src/main/java/com/todoapp/dataaccess/entity/User.java
 Content: 
-package com.todoapp.domain;
+package com.todoapp.dataaccess.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -797,7 +978,8 @@ public class User extends BaseTimeEntity {
     private String email;
 
     @Column(nullable = false)
-
+    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,20}$",
+            message = "비밀번호는 8~20자의 영문, 숫자, 특수문자를 포함해야 합니다.")
     private String password;
 
     @Column(nullable = false)
@@ -817,13 +999,144 @@ public class User extends BaseTimeEntity {
 
 
 File: 
-src/main/java/com/todoapp/dto/request/SignUpRequest.java
+src/main/java/com/todoapp/dataaccess/repository/TodoRepository.java
 Content: 
-package com.todoapp.dto.request;
+package com.todoapp.dataaccess.repository;
+
+import com.todoapp.dataaccess.entity.Todo;
+import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface TodoRepository extends JpaRepository<Todo, Long> {
+    List<Todo> findByCompleted(boolean completed);
+
+    List<Todo> findByTitleContaining(String title);
+}
 
 
-import com.todoapp.validation.PasswordMatch;
-import com.todoapp.validation.Password;
+File: 
+src/main/java/com/todoapp/dataaccess/repository/UserRepository.java
+Content: 
+package com.todoapp.dataaccess.repository;
+
+import com.todoapp.dataaccess.entity.User;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    Optional<User> findByEmail(String email);
+
+    boolean existsByEmail(String email);
+}
+
+
+File: 
+src/main/java/com/todoapp/implement/validator/PasswordMatch.java
+Content: 
+package com.todoapp.implement.validator;
+
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = PasswordMatchValidator.class)
+public @interface PasswordMatch {
+    String message() default "비밀번호가 일치하지 않습니다.";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
+
+    String password() default "password";
+    String passwordConfirm() default "passwordConfirm";
+
+}
+
+
+File: 
+src/main/java/com/todoapp/implement/validator/PasswordMatchValidator.java
+Content: 
+package com.todoapp.implement.validator;
+
+import com.todoapp.pressentation.dto.request.SignUpRequest;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+
+public class PasswordMatchValidator implements ConstraintValidator<PasswordMatch, SignUpRequest> {
+
+    @Override
+    public boolean isValid(SignUpRequest request, ConstraintValidatorContext context) {
+        if (request.getPassword() == null || request.getPasswordConfirm() == null) {
+            return true;
+        }
+
+        return request.getPassword().equals(request.getPasswordConfirm());
+    }
+}
+
+
+File: 
+src/main/java/com/todoapp/presentation/controller/AuthController.java
+Content: 
+package com.todoapp.pressentation.controller;
+
+import com.todoapp.dataaccess.entity.User;
+import com.todoapp.pressentation.dto.request.SignUpRequest;
+import com.todoapp.pressentation.dto.response.SignUpResponse;
+import com.todoapp.business.service.UserService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final UserService userService;
+
+    @PostMapping("/signup")
+    public ResponseEntity<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest request) {
+        User user = userService.signUp(request);
+
+        SignUpResponse response = SignUpResponse.from(user);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
+}
+
+
+File: 
+src/main/java/com/todoapp/presentation/controller/TodoController.java
+Content: 
+package com.todoapp.pressentation.controller;
+
+public class TodoController {
+}
+
+
+File: 
+src/main/java/com/todoapp/presentation/dto/request/SignUpRequest.java
+Content: 
+package com.todoapp.pressentation.dto.request;
+
+
+import com.todoapp.implement.validator.PasswordMatch;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -833,7 +1146,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -848,7 +1160,8 @@ public class SignUpRequest {
 
     @NotBlank(message = "비밀번호는 필수입니다.")
     @Size(min = 8, max = 20, message = "비밀번호는 8자 이상 20자 이하여야 합니다.")
-    @Password
+    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,20}$",
+            message = "비밀번호는 8~20자의 영문, 숫자, 특수문자를 포함해야 합니다.")
     private String password;
 
     @NotBlank(message = "비밀번호 확인은 필수입니다.")
@@ -866,9 +1179,9 @@ public class SignUpRequest {
 
 
 File: 
-src/main/java/com/todoapp/dto/request/TodoCreateRequest.java
+src/main/java/com/todoapp/presentation/dto/request/TodoCreateRequest.java
 Content: 
-package com.todoapp.dto.request;
+package com.todoapp.pressentation.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -892,143 +1205,11 @@ public class TodoCreateRequest {
 
 
 File: 
-src/main/java/com/todoapp/dto/response/SignUpResponse.java
+src/main/java/com/todoapp/presentation/dto/response/ErrorResponse.java
 Content: 
-package com.todoapp.dto.response;
+package com.todoapp.pressentation.dto.response;
 
-import com.todoapp.domain.User;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
-public class SignUpResponse {
-
-    private Long id;
-    private String email;
-    private String name;
-    private String message;
-
-    public static SignUpResponse from(User user) {
-        return new SignUpResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getName(),
-                "회원가입이 완료되었습니다."
-        );
-    }
-}
-
-
-File: 
-src/main/java/com/todoapp/dto/response/TodoResponse.java
-Content: 
-package com.todoapp.dto.response;
-
-import com.todoapp.domain.Todo;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
-public class TodoResponse {
-
-    private Long id;
-    private String title;
-    private String description;
-    private boolean completed;
-    private Instant createdAt;
-
-    public static TodoResponse from(Todo todo) {
-        return new TodoResponse(
-                todo.getId(),
-                todo.getTitle(),
-                todo.getDescription(),
-                todo.isCompleted(),
-                todo.getCreatedAt()
-        );
-    }
-}
-
-
-File: 
-src/main/java/com/todoapp/exception/BusinessException.java
-Content: 
-package com.todoapp.exception;
-
-import lombok.Getter;
-
-@Getter
-public abstract class BusinessException extends RuntimeException {
-
-    private final ErrorCode errorCode;
-
-    protected BusinessException(ErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.errorCode = errorCode;
-    }
-
-    protected BusinessException(ErrorCode errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
-    }
-}
-
-
-File: 
-src/main/java/com/todoapp/exception/DuplicateEmailException.java
-Content: 
-package com.todoapp.exception;
-
-public class DuplicateEmailException extends BusinessException {
-
-    public DuplicateEmailException() {
-        super(ErrorCode.DUPLICATE_EMAIL);
-    }
-
-    public DuplicateEmailException(String email) {
-        super(ErrorCode.DUPLICATE_EMAIL, "이미 사용 중인 이메일입니다: " + email);
-    }
-}
-
-
-File: 
-src/main/java/com/todoapp/exception/ErrorCode.java
-Content: 
-package com.todoapp.exception;
-
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-
-@Getter
-@RequiredArgsConstructor
-public enum ErrorCode {
-    // 400 Bad Request
-    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "E001", "잘못된 입력값입니다."),
-
-    // 409 Conflict
-    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "E002", "이미 사용 중인 이메일입니다."),
-
-    // 404 Not Found
-    TODO_NOT_FOUND(HttpStatus.NOT_FOUND, "E003", "Todo 찾을 수 없습니다."),
-
-    // 500 Internal Server Error
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E999", "서버 오류가 발생했습니다.");
-
-    private final HttpStatus status;
-    private final String code;
-    private final String message;
-}
-
-
-File: 
-src/main/java/com/todoapp/exception/ErrorResponse.java
-Content: 
-package com.todoapp.exception;
-
+import com.todoapp.common.exception.ErrorCode;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -1060,10 +1241,72 @@ public class ErrorResponse {
 
 
 File: 
-src/main/java/com/todoapp/exception/GlobalExceptionHandler.java
+src/main/java/com/todoapp/presentation/dto/response/SignUpResponse.java
 Content: 
-package com.todoapp.exception;
+package com.todoapp.pressentation.dto.response;
 
+import com.todoapp.dataaccess.entity.User;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public class SignUpResponse {
+
+    private Long id;
+    private String email;
+    private String name;
+    private String message;
+
+    public static SignUpResponse from(User user) {
+        return new SignUpResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                "회원가입이 완료되었습니다."
+        );
+    }
+}
+
+
+File: 
+src/main/java/com/todoapp/presentation/dto/response/TodoResponse.java
+Content: 
+package com.todoapp.pressentation.dto.response;
+
+import com.todoapp.dataaccess.entity.Todo;
+import java.time.Instant;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public class TodoResponse {
+
+    private Long id;
+    private String title;
+    private String description;
+    private boolean completed;
+    private Instant createdAt;
+
+    public static TodoResponse from(Todo todo) {
+        return new TodoResponse(
+                todo.getId(),
+                todo.getTitle(),
+                todo.getDescription(),
+                todo.isCompleted(),
+                todo.getCreatedDate()
+        );
+    }
+}
+
+
+File: 
+src/main/java/com/todoapp/presentation/exception/GlobalExceptionHandler.java
+Content: 
+package com.todoapp.pressentation.exception;
+
+import com.todoapp.common.exception.DuplicateEmailException;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -1082,238 +1325,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(errors);
-    }
-}
-
-
-File: 
-src/main/java/com/todoapp/repository/TodoRepository.java
-Content: 
-package com.todoapp.repository;
-
-import com.todoapp.domain.Todo;
-import java.util.List;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-@Repository
-public interface TodoRepository extends JpaRepository<Todo, Long> {
-    List<Todo> findByCompleted(boolean completed);
-
-    List<Todo> findByTitleContaining(String title);
-}
-
-
-File: 
-src/main/java/com/todoapp/repository/UserRepository.java
-Content: 
-package com.todoapp.repository;
-
-import com.todoapp.domain.User;
-import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-@Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-
-    Optional<User> findByEmail(String email);
-
-    boolean existsByEmail(String email);
-}
-
-
-File: 
-src/main/java/com/todoapp/service/TodoService.java
-Content: 
-package com.todoapp.service;
-
-import com.todoapp.domain.Todo;
-import com.todoapp.dto.request.TodoCreateRequest;
-import com.todoapp.dto.response.TodoResponse;
-import com.todoapp.repository.TodoRepository;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-@Service
-@Transactional(readOnly = true)
-@RequiredArgsConstructor
-public class TodoService {
-
-    private final TodoRepository todoRepository;
-
-}
-
-
-File: 
-src/main/java/com/todoapp/service/UserService.java
-Content: 
-package com.todoapp.service;
-
-import com.todoapp.domain.User;
-import com.todoapp.dto.request.SignUpRequest;
-import com.todoapp.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-@Service
-@Transactional(readOnly = true)
-@RequiredArgsConstructor
-public class UserService {
-
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-
-    @Transactional
-    public User signUp(SignUpRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already exists");
-        }
-
-        String encodePassword = passwordEncoder.encode(request.getPassword());
-
-        User user = User.builder()
-                .email(request.getEmail())
-                .password(encodePassword)
-                .name(request.getName())
-                .phoneNumber(request.getPhoneNumber())
-                .build();
-
-        return userRepository.save(user);
-    }
-}
-
-
-File: 
-src/main/java/com/todoapp/validation/Password.java
-Content: 
-package com.todoapp.validation;
-
-import jakarta.validation.Constraint;
-import jakarta.validation.Payload;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = StrongPasswordValidator.class)
-public @interface Password {
-    String message() default "비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다";
-    Class<?>[] groups() default {};
-    Class<? extends Payload>[] payload() default {};
-}
-
-
-File: 
-src/main/java/com/todoapp/validation/PasswordMatch.java
-Content: 
-package com.todoapp.validation;
-
-import jakarta.validation.Constraint;
-import jakarta.validation.Payload;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = PasswordMatchValidator.class)
-public @interface PasswordMatch {
-    String message() default "비밀번호가 일치하지 않습니다.";
-    Class<?>[] groups() default {};
-    Class<? extends Payload>[] payload() default {};
-
-    String password() default "password";
-    String passwordConfirm() default "passwordConfirm";
-
-}
-
-
-File: 
-src/main/java/com/todoapp/validation/PasswordMatchValidator.java
-Content: 
-package com.todoapp.validation;
-
-import com.todoapp.dto.request.SignUpRequest;
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
-
-public class PasswordMatchValidator implements ConstraintValidator<PasswordMatch, SignUpRequest> {
-
-    @Override
-    public boolean isValid(SignUpRequest request, ConstraintValidatorContext context) {
-        if (request.getPassword() == null || request.getPasswordConfirm() == null) {
-            return true;
-        }
-
-        return request.getPassword().equals(request.getPasswordConfirm());
-    }
-}
-
-
-File: 
-src/main/java/com/todoapp/validation/StrongPasswordValidator.java
-Content: 
-package com.todoapp.validation;
-
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
-import java.util.Arrays;
-import java.util.List;
-import org.passay.CharacterRule;
-import org.passay.EnglishCharacterData;
-import org.passay.LengthRule;
-import org.passay.PasswordData;
-import org.passay.PasswordValidator;
-import org.passay.Rule;
-import org.passay.RuleResult;
-import org.passay.WhitespaceRule;
-
-public class StrongPasswordValidator implements ConstraintValidator<Password, String> {
-
-    private PasswordValidator passwordValidator;
-
-    public void initialize(Password constraintAnnotation) {
-        List<Rule> rules = List.of(
-                new CharacterRule(EnglishCharacterData.UpperCase, 1),
-                new CharacterRule(EnglishCharacterData.LowerCase, 1),
-                new CharacterRule(EnglishCharacterData.Digit, 1),
-                new CharacterRule(EnglishCharacterData.Special, 1),
-                new WhitespaceRule(),
-                new LengthRule(8, 20)
-        );
-
-        this.passwordValidator = new PasswordValidator(rules);
-
-    }
-
-    @Override
-    public boolean isValid(String password, ConstraintValidatorContext context) {
-        if (password == null) {
-            return true;
-        }
-
-        RuleResult result = passwordValidator.validate(new PasswordData(password));
-
-        if(result.isValid()) {
-            return true;
-        }
-
-        context.disableDefaultConstraintViolation();
-
-        String message = String.join(", ", passwordValidator.getMessages(result));
-
-        context.buildConstraintViolationWithTemplate(message)
-                .addConstraintViolation();
-
-        return false;
     }
 }
 
@@ -1739,11 +1750,11 @@ package com.todoapp;
 
 import static org.assertj.core.api.Assertions.*;
 
-import com.todoapp.domain.Todo;
-import com.todoapp.dto.request.TodoCreateRequest;
-import com.todoapp.dto.response.TodoResponse;
-import com.todoapp.repository.TodoRepository;
-import com.todoapp.service.TodoService;
+import com.todoapp.dataaccess.entity.Todo;
+import com.todoapp.pressentation.dto.request.TodoCreateRequest;
+import com.todoapp.pressentation.dto.response.TodoResponse;
+import com.todoapp.dataaccess.repository.TodoRepository;
+import com.todoapp.business.service.TodoService;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -1875,11 +1886,11 @@ package com.todoapp;
 
 import static org.assertj.core.api.Assertions.*;
 
-import com.todoapp.domain.User;
-import com.todoapp.dto.request.SignUpRequest;
-import com.todoapp.exception.DuplicateEmailException;
-import com.todoapp.repository.UserRepository;
-import com.todoapp.service.UserService;
+import com.todoapp.dataaccess.entity.User;
+import com.todoapp.pressentation.dto.request.SignUpRequest;
+import com.todoapp.common.exception.DuplicateEmailException;
+import com.todoapp.dataaccess.repository.UserRepository;
+import com.todoapp.business.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1907,9 +1918,9 @@ class UserSignUpIntegrationTest {
                 .phoneNumber("010-1234-1234")
                 .build();
 
-        Long userId = userService.signUp(request);
+        User user = userService.signUp(request);
 
-        User savedUser = userRepository.findById(userId).orElseThrow();
+        User savedUser = userRepository.findById(user.getId()).orElseThrow();
         assertThat(savedUser.getName()).isEqualTo("강두기");
         assertThat(savedUser.getEmail()).isEqualTo("test123@gmail.com");
 
@@ -1939,11 +1950,12 @@ class UserSignUpIntegrationTest {
                 .build();
 
         assertThatThrownBy(() -> userService.signUp(second))
-                .isInstanceOf(DuplicateEmailException.class);
+                .isInstanceOf(IllegalArgumentException.class);
 
         assertThat(userRepository.count()).isEqualTo(1);
     }
 }
+
 
 File: 
 src/test/java/com/todoapp/TodoValidationTest.java
@@ -1955,7 +1967,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.todoapp.dto.request.TodoCreateRequest;
+import com.todoapp.pressentation.dto.request.TodoCreateRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

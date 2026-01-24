@@ -1,4 +1,4 @@
-package com.todoapp.validation;
+package com.todoapp.implement.validator;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

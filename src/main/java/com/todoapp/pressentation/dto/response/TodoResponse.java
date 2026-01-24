@@ -1,6 +1,6 @@
 package com.todoapp.pressentation.dto.response;
 
-import com.todoapp.domain.Todo;
+import com.todoapp.dataaccess.entity.Todo;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +21,7 @@ public class TodoResponse {
                 todo.getTitle(),
                 todo.getDescription(),
                 todo.isCompleted(),
-                todo.getCreatedAt()
+                todo.getCreatedDate()
         );
     }
 }

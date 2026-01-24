@@ -1,4 +1,4 @@
-package com.todoapp.validation;
+package com.todoapp.implement.validator;
 
 import com.todoapp.pressentation.dto.request.SignUpRequest;
 import jakarta.validation.ConstraintValidator;
