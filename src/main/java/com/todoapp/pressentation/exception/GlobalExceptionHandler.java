@@ -1,8 +1,7 @@
 package com.todoapp.pressentation.exception;
 
-import com.todoapp.common.exception.DuplicateEmailException;
+import com.todoapp.common.exception.BusinessException;
 import com.todoapp.common.exception.ErrorCode;
-import com.todoapp.common.exception.InvalidCredentialsException;
 import com.todoapp.pressentation.dto.response.ErrorResponse;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,23 +26,18 @@ public class GlobalExceptionHandler {
             errors.put(error.getObjectName(), error.getDefaultMessage())
         );
 
+        ErrorCode errorCode = ErrorCode.INVALID_INPUT_VALUE;
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(errorCode.getStatus())
                 .body(ErrorResponse.of("C001", "입력값 검증에 실패했습니다.", errors));
     }
 
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException e) {
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
+        ErrorCode errorCode = e.getErrorCode();
         return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponse.of(ErrorCode.INVALID_CREDENTIALS));
-    }
-
-    @ExceptionHandler(DuplicateEmailException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateEmail(DuplicateEmailException e) {
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(ErrorResponse.of(ErrorCode.DUPLICATE_EMAIL));
+                .status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode, e.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -55,8 +49,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
+        ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR));
+                .status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode));
     }
 }
