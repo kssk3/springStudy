@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project
+
+- Backend API project using Spring Boot (Java 21)
+- Primary goal: **production-quality code** (readable, testable, efficient), not just "works"
+
 ## Instruction Files
 
 Always follow the instructions in HELP.md (teaching/explanation style guidelines).
@@ -16,6 +21,30 @@ Always follow the instructions in HELP.md (teaching/explanation style guidelines
 ./gradlew test --tests ClassName.methodName        # Run a specific test
 ./gradlew test --tests ClassName                   # Run all tests in a class
 ```
+
+## Non-negotiable Rules (MUST)
+
+1. Do not output "working-only" code. Always optimize for clarity + maintainability + predictable performance.
+2. Avoid unnecessary work: no redundant loops, redundant allocations, redundant conversions, redundant branching, or repeated getter calls without justification.
+3. Keep error handling consistent: use ErrorCode for code/message/status; no hardcoded literals.
+4. If you change behavior/contract, call it out explicitly and ask before proceeding.
+5. Prefer deterministic code paths: parsing/validation/formatting should be plain code, not "clever" patterns that hide cost.
+
+## Refactor Standard (default expectation)
+
+Whenever you edit existing code, you MUST:
+1. Provide the refactored code.
+2. Explain: what was wasteful or risky, and how you removed it (2-5 bullets).
+3. Provide a small verification plan: tests to add or how to run existing tests.
+
+## Performance Checklist
+
+When writing or refactoring code, check these (in order):
+- Remove repeated computation / repeated access (e.g., calling the same method multiple times)
+- Avoid pre-check patterns that duplicate work (e.g., `hasXxx()` then `getXxx()`) unless you prove benefit
+- Minimize passes over collections: aim for one pass when building maps/lists
+- Avoid intermediate collections unless they improve clarity AND cost is negligible
+- For hot paths, prefer simple loops; for cold paths, prioritize readability but still avoid obvious waste
 
 ## Architecture
 
@@ -48,6 +77,7 @@ All entities extend `BaseTimeEntity` which provides:
 - `ErrorCode` enum defines all error codes with HttpStatus, code, and message
 - `BusinessException` wraps ErrorCode for business logic errors
 - `GlobalExceptionHandler` handles validation errors and business exceptions
+- For validation errors: build error map in single transformation, define key-collision policy explicitly
 
 ### Password Validation
 
@@ -83,10 +113,9 @@ URL: `http://localhost:8080/h2-console`
 
 **Auth API**:
 - `POST /api/auth/signup` - User registration
+- `POST /api/auth/login` - User login
 
 ## Code Writing Principles
-
-When writing code, follow these principles:
 
 1. **Consistency** - Use the same patterns across similar methods within a class. If one method validates existence before operating, all similar methods should do the same.
 
@@ -103,3 +132,21 @@ When writing code, follow these principles:
 7. **Extract Repeated Calls** - If calling the same method multiple times (e.g., `e.getBindingResult()`), extract it to a local variable.
 
 8. **Production-Ready from Start** - Write code as if it will be deployed immediately. No "quick fix now, improve later" mindset.
+
+## Java Style Preferences
+
+- Prefer small pure functions for transformations (e.g., `BindingResult -> Map<String,String>`)
+- Prefer immutability by default (`final`), unless mutation improves clarity/performance
+- Keep methods short and named by intent (what/why, not how)
+
+## Testing Expectations
+
+- If you introduce or modify logic, propose unit tests (JUnit5)
+- For exception handlers, include tests for: field errors only, global errors only, mixed, duplicate keys policy
+- Run `./gradlew test` to verify all tests pass before committing
+
+## Interaction Protocol
+
+- If the task is ambiguous, ask 1-3 clarifying questions before coding
+- Otherwise, implement the smallest correct change first, then propose improvements as optional follow-ups
+- When you propose a "better" solution, include trade-offs (readability vs allocations vs extensibility)
