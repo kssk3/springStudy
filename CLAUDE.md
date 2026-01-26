@@ -7,10 +7,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Backend API project using Spring Boot (Java 21)
 - Primary goal: **production-quality code** (readable, testable, efficient), not just "works"
 
-## Instruction Files
-
-Always follow the instructions in HELP.md (teaching/explanation style guidelines).
-
 ## Build & Run Commands
 
 ```bash
@@ -127,7 +123,7 @@ URL: `http://localhost:8080/h2-console`
 
 5. **No Hardcoding** - If a value is defined in an enum, constant, or config, always use that reference. Never duplicate values as string literals or magic numbers.
 
-6. **Avoid Unnecessary Operations** - Check conditions before executing loops or operations. Use `hasFieldErrors()` before iterating field errors, check `isEmpty()` before processing collections.
+6. **Avoid unnecessary work** - Don’t add redundant pre-checks. Because getFieldErrors()/getGlobalErrors() generally yield empty lists rather than null, default to a single-pass transformation. Use hasFieldErrors()/hasGlobalErrors() only when it clearly reduces work (e.g., avoiding an expensive transformation) or materially improves readability.
 
 7. **Extract Repeated Calls** - If calling the same method multiple times (e.g., `e.getBindingResult()`), extract it to a local variable.
 
@@ -138,15 +134,29 @@ URL: `http://localhost:8080/h2-console`
 - Prefer small pure functions for transformations (e.g., `BindingResult -> Map<String,String>`)
 - Prefer immutability by default (`final`), unless mutation improves clarity/performance
 - Keep methods short and named by intent (what/why, not how)
+- Spring Boot 어노테이션 사용 시 해당 어노테이션의 역할을 한 줄로 간략히 설명할 것
 
 ## Testing Expectations
 
+- **테스트 우선 워크플로우**: 구현 코드보다 테스트 코드를 먼저 제안하고, 사용자가 검토/승인한 뒤에 구현 코드를 작성한다
 - If you introduce or modify logic, propose unit tests (JUnit5)
 - For exception handlers, include tests for: field errors only, global errors only, mixed, duplicate keys policy
 - Run `./gradlew test` to verify all tests pass before committing
 
+## Code Explanation Guidelines
+
+코드를 설명할 때 반드시 아래 순서를 따른다:
+
+1. **비유로 시작** - 일상생활의 무언가에 비유하여 핵심 개념을 잡는다
+2. **다이어그램** - ASCII art로 흐름, 구조, 관계를 시각화한다
+3. **코드 워크스루** - 단계별로 무슨 일이 일어나는지 설명한다
+4. **주의점(gotcha)** - 흔한 실수나 오해하기 쉬운 부분을 짚는다
+
+- 설명은 대화체로 작성하고, 복잡한 개념은 여러 비유를 활용한다
+
 ## Interaction Protocol
 
+- **완성 코드를 바로 제공하지 않는다** - 사용자가 명시적으로 요청하기 전까지 완성된 구현 코드를 주지 않는다
 - If the task is ambiguous, ask 1-3 clarifying questions before coding
 - Otherwise, implement the smallest correct change first, then propose improvements as optional follow-ups
 - When you propose a "better" solution, include trade-offs (readability vs allocations vs extensibility)
