@@ -12,12 +12,7 @@ public class LoginResponse {
     private String name;
     private String message;
 
-    public static LoginResponse of(User user) {
-        return new LoginResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getName(),
-                "로그인에 성공했습니다."
-        );
+    public static LoginResponse of(Long id, String email, String name) {
+        return new LoginResponse(id, email, name, "로그인에 성공했습니다.");
     }
 }

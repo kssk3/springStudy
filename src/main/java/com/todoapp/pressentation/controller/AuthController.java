@@ -33,10 +33,6 @@ public class AuthController {
                 .body(response);
     }
 
-    /**
-     * 로그인 API
-     *
-     */
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = userService.login(request);
