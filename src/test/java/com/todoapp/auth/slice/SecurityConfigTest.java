@@ -1,4 +1,4 @@
-package com.todoapp.common.config;
+package com.todoapp.auth.slice;
 
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;

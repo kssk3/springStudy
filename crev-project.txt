@@ -56,19 +56,6 @@ Project Directory Structure:
 │   │   │   │   │   │   │   │   └── TodoResponse.java
 │   │   │   │   │   │   ├── exception
 │   │   │   │   │   │   │   └── GlobalExceptionHandler.java
-│   │   │   ├── test
-│   │   │   │   ├── Application.java
-│   │   │   │   ├── ErrorResponse.java
-│   │   │   │   ├── GlobalExceptionHandler.java
-│   │   │   │   ├── SignUpRequest.java
-│   │   │   │   ├── Todo.java
-│   │   │   │   ├── TodoController.java
-│   │   │   │   ├── TodoCreateRequest.java
-│   │   │   │   ├── TodoRepository.java
-│   │   │   │   ├── TodoResponse.java
-│   │   │   │   ├── TodoService.java
-│   │   │   │   ├── User.java
-│   │   │   │   └── UserRepository.java
 │   │   ├── resources
 │   │   │   ├── application.yml
 │   │   │   └── templates
@@ -77,19 +64,18 @@ Project Directory Structure:
 │   │   │   ├── com
 │   │   │   │   ├── todoapp
 │   │   │   │   │   ├── ApplicationTests.java
-│   │   │   │   │   ├── Integration
-│   │   │   │   │   │   ├── TodoIntegrationTest.java
-│   │   │   │   │   │   ├── UserLoginIntegrationTest.java
-│   │   │   │   │   │   └── UserSignUpIntegrationTest.java
-│   │   │   │   │   ├── TodoValidationTest.java
-│   │   │   │   │   ├── common
-│   │   │   │   │   │   ├── config
+│   │   │   │   │   ├── auth
+│   │   │   │   │   │   ├── integration
+│   │   │   │   │   │   │   ├── UserLoginIntegrationTest.java
+│   │   │   │   │   │   │   └── UserSignUpIntegrationTest.java
+│   │   │   │   │   │   ├── slice
+│   │   │   │   │   │   │   ├── AuthControllerTest.java
 │   │   │   │   │   │   │   └── SecurityConfigTest.java
-│   │   │   │   │   ├── controller
-│   │   │   │   │   │   └── AuthControllerTest.java
-│   │   │   ├── test
-│   │   │   │   ├── ApplicationTests.java
-│   │   │   │   └── TodoValidationTest.java
+│   │   │   │   │   ├── todo
+│   │   │   │   │   │   ├── integration
+│   │   │   │   │   │   │   └── TodoIntegrationTest.java
+│   │   │   │   │   │   ├── slice
+│   │   │   │   │   │   │   └── TodoValidationTest.java
 │   │   └── resources
 
 
@@ -835,12 +821,16 @@ Content:
 package com.todoapp.business.service;
 
 import com.todoapp.common.exception.InvalidCredentialsException;
+import com.todoapp.common.security.CustomUserDetails;
 import com.todoapp.dataaccess.entity.User;
 import com.todoapp.pressentation.dto.request.LoginRequest;
 import com.todoapp.pressentation.dto.request.SignUpRequest;
 import com.todoapp.dataaccess.repository.UserRepository;
 import com.todoapp.pressentation.dto.response.LoginResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -852,6 +842,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     @Transactional
     public User signUp(SignUpRequest request) {
@@ -874,22 +865,31 @@ public class UserService {
     }
 
     /**
-     * 로그인 - 이메일과 비밀번호로 사용자 인
+     * 로그인 - Spring Security AuthenticationManager
      *
      * @param request 로그인 요청 (이메일, 비밀번호)
      * @return LoginResponse 로그인 성공 정보
      * @throws InvalidCredentialsException 이메일 또는 비밀번호 불일치
      */
     public LoginResponse login(LoginRequest request) {
-        // 1단계 이메일로 사용자 찾기
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(InvalidCredentialsException::new);
+        // 1단계 : Spring Security 인증 수행
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
 
-        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
-            throw new InvalidCredentialsException();
-        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        return LoginResponse.of(user);
+        return LoginResponse.of(
+                userDetails.getUserId(),
+                userDetails.getEmail(),
+                userDetails.getName()
+        );
     }
+
+
 }
 
 
@@ -908,7 +908,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -1120,26 +1119,6 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public @Nullable String getPassword() {
         return user.getPassword();
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;  // 계정 만료 기능 없음
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;  // 계정 잠금 기능 없음
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;  // 비밀번호 만료 기능 없음
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;  // 계정 활성화 여부 (이메일 인증 등)
     }
 
     // User Entity에 직접 접근할 수 있는 메서드
@@ -1677,13 +1656,8 @@ public class LoginResponse {
     private String name;
     private String message;
 
-    public static LoginResponse of(User user) {
-        return new LoginResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getName(),
-                "로그인에 성공했습니다."
-        );
+    public static LoginResponse of(Long id, String email, String name) {
+        return new LoginResponse(id, email, name, "로그인에 성공했습니다.");
     }
 }
 
@@ -1821,371 +1795,6 @@ public class GlobalExceptionHandler {
 
 
 File: 
-src/main/java/test/Application.java
-Content: 
-package test;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-@SpringBootApplication
-public class Application {
-
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
-
-}
-
-
-File: 
-src/main/java/test/ErrorResponse.java
-Content: 
-package test;
-
-
-import java.time.LocalDateTime;
-import java.util.Map;
-import lombok.Getter;
-
-@Getter
-public class ErrorResponse {
-    private final String code;
-    private final String message;
-    private final Map<String, String> errors;
-    private final LocalDateTime timestamp;
-
-    public ErrorResponse(String code, String message, Map<String, String> errors) {
-        this.code = code;
-        this.message = message;
-        this.errors = errors;
-        this.timestamp = LocalDateTime.now();
-    }
-}
-
-
-File: 
-src/main/java/test/GlobalExceptionHandler.java
-Content: 
-package test;
-
-import java.util.HashMap;
-import java.util.Map;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-@RestControllerAdvice
-public class GlobalExceptionHandler {
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex) {
-
-        Map<String, String> errors = new HashMap<>();
-
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                "VALIDATION_FAILED",
-                "입력값 검증에 실패했습니다",
-                errors
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                "INVALID_ARGUMENT",
-                ex.getMessage(),
-                null
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception ex) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                "INTERNAL_SERVER_ERROR",
-                "서버 내부 오류가 발생했습니다",
-                null
-        );
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorResponse);
-    }
-}
-
-
-File: 
-src/main/java/test/SignUpRequest.java
-Content: 
-package test;
-
-public class SignUpRequest {
-}
-
-
-File: 
-src/main/java/test/Todo.java
-Content: 
-package test;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import java.time.LocalDateTime;
-import lombok.Getter;
-
-@Entity
-@Getter
-public class Todo {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private String title;
-
-    private String description;
-
-    private boolean completed;
-
-    private LocalDateTime createdAt;
-
-    protected Todo() {
-    }
-
-    public Todo(String title, String description) {
-        this.title = title;
-        this.description = description;
-        this.completed = false;
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public void complete() {
-        this.completed = true;
-    }
-
-    public void updateTitle(String title) {
-        this.title = title;
-    }
-}
-
-
-File: 
-src/main/java/test/TodoController.java
-Content: 
-package test;
-
-import jakarta.validation.Valid;
-import java.util.List;
-import lombok.AllArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-@RestController
-@RequestMapping("api/todos")
-@AllArgsConstructor
-public class TodoController {
-
-    private final TodoService todoService;
-
-    @PostMapping
-    public ResponseEntity<Long> create(@Valid @RequestBody TodoCreateRequest request) {
-        Long todo = todoService.createTodo(request.getTitle(), request.getDescription());
-        return ResponseEntity.ok(todo);
-    }
-
-    @GetMapping
-    public ResponseEntity<List<TodoResponse>> findAll() {
-        List<Todo> todos = todoService.findAll();
-        List<TodoResponse> response = todos.stream()
-                .map(TodoResponse::from)
-                .toList();
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<TodoResponse> findById(@RequestParam Long id) {
-        Todo todo = todoService.findById(id);
-        return ResponseEntity.ok(TodoResponse.from(todo));
-    }
-
-    @PatchMapping("/{id}/complete")
-    public ResponseEntity<Void> complete(@PathVariable Long id) {
-        todoService.completeTodo(id);
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteById(@PathVariable Long id) {
-        todoService.deleteTodo(id);
-        return ResponseEntity.ok().build();
-    }
-}
-
-
-File: 
-src/main/java/test/TodoCreateRequest.java
-Content: 
-package test;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-@Getter
-@NoArgsConstructor
-public class TodoCreateRequest {
-
-    @NotBlank(message = "제목은 필수입니다")
-    @Size(min = 1, max = 50, message = "제목은 1자 이상 50자 이하여야 합니다.")
-    private String title;
-
-    @Size(max = 500, message = "설명은 500자 이하여야 합니다.")
-    private String description;
-
-}
-
-
-File: 
-src/main/java/test/TodoRepository.java
-Content: 
-package test;
-
-import java.util.List;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-@Repository
-public interface TodoRepository extends JpaRepository<Todo, Long> {
-    List<Todo> findByCompleted(boolean completed);
-
-    List<Todo> findByTitleContaining(String title);
-}
-
-
-File: 
-src/main/java/test/TodoResponse.java
-Content: 
-package test;
-
-import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
-public class TodoResponse {
-
-    private Long id;
-    private String title;
-    private String description;
-    private boolean completed;
-    private LocalDateTime createdAt;
-
-    public static TodoResponse from(Todo todo) {
-        return new TodoResponse(
-                todo.getId(),
-                todo.getTitle(),
-                todo.getDescription(),
-                todo.isCompleted(),
-                todo.getCreatedAt()
-        );
-    }
-}
-
-
-File: 
-src/main/java/test/TodoService.java
-Content: 
-package test;
-
-import java.util.List;
-import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-@Service
-@Transactional(readOnly = true)
-@AllArgsConstructor
-public class TodoService {
-
-    private final TodoRepository todoRepository;
-
-    @Transactional
-    public Long createTodo(String title, String description) {
-        Todo todo = new Todo(title, description);
-        Todo saved = todoRepository.save(todo);
-        return saved.getId();
-    }
-
-    public Todo findById(Long id) {
-        return todoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Todo not found " + id));
-    }
-
-    public List<Todo> findAll() {
-        return todoRepository.findAll();
-    }
-
-    @Transactional
-    public void completeTodo(Long id) {
-        Todo todo = findById(id);
-        todo.complete();
-    }
-
-    @Transactional
-    public void deleteTodo(Long id) {
-        Todo todo = findById(id);
-        todoRepository.deleteById(id);
-    }
-}
-
-
-File: 
-src/main/java/test/User.java
-Content: 
-package test;
-
-public class User {
-}
-
-
-File: 
-src/main/java/test/UserRepository.java
-Content: 
-package test;
-
-public class UserRepository {
-}
-
-
-File: 
 src/main/resources/application.yml
 Content: 
 spring:
@@ -2235,9 +1844,309 @@ class ApplicationTests {
 
 
 File: 
-src/test/java/com/todoapp/Integration/TodoIntegrationTest.java
+src/test/java/com/todoapp/auth/integration/UserLoginIntegrationTest.java
 Content: 
-package com.todoapp;
+package com.todoapp.auth.integration;
+
+import static org.assertj.core.api.Assertions.*;
+
+import com.todoapp.business.service.UserService;
+import com.todoapp.common.exception.InvalidCredentialsException;
+import com.todoapp.dataaccess.repository.UserRepository;
+import com.todoapp.pressentation.dto.request.LoginRequest;
+import com.todoapp.pressentation.dto.request.SignUpRequest;
+import com.todoapp.pressentation.dto.response.LoginResponse;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
+
+@SpringBootTest
+@Transactional
+public class UserLoginIntegrationTest {
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @BeforeEach
+    void setUp() {
+        SignUpRequest request = SignUpRequest.builder()
+                .email("kss8014@gmail.com")
+                .password("Password123@")
+                .passwordConfirm("Password123@")
+                .name("강두기")
+                .phoneNumber("010-9203-5808")
+                .build();
+
+        userService.signUp(request);
+    }
+
+    @Test
+    @DisplayName("올바른 이메일과 비밀번호로 로그인 성공")
+    void login_WithValidCredentials_Success() {
+        // given
+        LoginRequest request = new LoginRequest("kss8014@gmail.com", "Password123@");
+
+        // when
+        LoginResponse response = userService.login(request);
+
+        // then
+        assertThat(response.getEmail()).isEqualTo("kss8014@gmail.com");
+        assertThat(response.getName()).isEqualTo("강두기");
+        assertThat(response.getMessage()).isEqualTo("로그인에 성공했습니다.");
+    }
+
+    @Test
+    @DisplayName("존재하지 않은 이메일로 로그인 시도 시 실패")
+    void login_WithNonExistentEmail_Fail() {
+        // given
+        LoginRequest request = new LoginRequest("test123@gmail.com", "Password123@");
+
+        // when & then
+        assertThatThrownBy(() -> userService.login(request))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("이메일 또는 비밀번호가 일치하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("잘못된 비밀번호로 로그인 시도 시 실패")
+    void login_WithWrongPassword_Fail() {
+        // given
+        LoginRequest request = new LoginRequest("kss8014@gmail.com", "TestPassword123@");
+
+        // when & then
+        assertThatThrownBy(() -> userService.login(request))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("이메일 또는 비밀번호가 일치하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("로그인 성공 후 반환된 userId가 올바른지 확인")
+    void login_Success_ReturnCorrectUserId() {
+        // given
+        LoginRequest request = new LoginRequest("kss8014@gmail.com", "Password123@");
+
+        // when
+        LoginResponse response = userService.login(request);
+
+        assertThat(userRepository.findById(response.getId())).isPresent();
+    }
+}
+
+
+File: 
+src/test/java/com/todoapp/auth/integration/UserSignUpIntegrationTest.java
+Content: 
+package com.todoapp.auth.integration;
+
+import static org.assertj.core.api.Assertions.*;
+
+import com.todoapp.dataaccess.entity.User;
+import com.todoapp.pressentation.dto.request.SignUpRequest;
+import com.todoapp.dataaccess.repository.UserRepository;
+import com.todoapp.business.service.UserService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
+
+@SpringBootTest
+@Transactional
+class UserSignUpIntegrationTest {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
+
+    @Test
+    @DisplayName("회원가입 성공 테스트")
+    void 회원가입_성공_테스트() {
+        SignUpRequest request = SignUpRequest.builder()
+                .email("test123@gmail.com")
+                .password("Password123!")
+                .passwordConfirm("Password123!")
+                .name("강두기")
+                .phoneNumber("010-1234-1234")
+                .build();
+
+        User user = userService.signUp(request);
+
+        User savedUser = userRepository.findById(user.getId()).orElseThrow();
+        assertThat(savedUser.getName()).isEqualTo("강두기");
+        assertThat(savedUser.getEmail()).isEqualTo("test123@gmail.com");
+
+        assertThat(savedUser.getPassword()).isNotEqualTo("Password123!");
+        assertThat(savedUser.getPassword()).startsWith("$2a$");
+    }
+
+    @Test
+    @DisplayName("회원가입 후 중복 이메일로 재가입 시 실패")
+    void signUp_ThenDuplicateEmail_Fail() {
+        SignUpRequest first = SignUpRequest.builder()
+                .email("test123@gmail.com")
+                .password("Password123!")
+                .passwordConfirm("Password123!")
+                .name("강두기")
+                .phoneNumber("010-1234-1234")
+                .build();
+
+        userService.signUp(first);
+
+        SignUpRequest second = SignUpRequest.builder()
+                .email("test123@gmail.com")
+                .password("Password123!")
+                .passwordConfirm("Password123!")
+                .name("강맑음")
+                .phoneNumber("010-1234-1234")
+                .build();
+
+        assertThatThrownBy(() -> userService.signUp(second))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(userRepository.count()).isEqualTo(1);
+    }
+}
+
+
+File: 
+src/test/java/com/todoapp/auth/slice/AuthControllerTest.java
+Content: 
+package com.todoapp.auth.slice;
+
+class AuthControllerTest {
+
+}
+
+
+File: 
+src/test/java/com/todoapp/auth/slice/SecurityConfigTest.java
+Content: 
+package com.todoapp.auth.slice;
+
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.todoapp.pressentation.dto.request.TodoCreateRequest;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+class SecurityConfigTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    @DisplayName("회원가입 API는 인증 없이 접근 가능")
+    void signupEndPoint_WithoutAuthentication_ShouldBeAccessible() throws Exception {
+        String body = """
+                {
+                    "email": "test123@gmail.com",
+                    "password": "Password123@",
+                    "passwordConfirm": "Password123@",
+                    "name": "강두기",
+                    "phoneNumber": "010-1234-1234"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("로그인 API는 인증 없이 접근 가능")
+    void loginEndPoint_WithoutAuthentication_ShouldBeAccessible() throws Exception {
+        String body = """
+                {
+                    "email": "test123@gmail.com",
+                    "password": "Password123@",
+                    "passwordConfirm": "Password123@",
+                    "name": "강두기",
+                    "phoneNumber": "010-1234-1234"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/signup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+        String login = """
+                {
+                    "email": "test123@gmail.com",
+                    "password": "Password123@"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(login))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("TODO API 인증 없이 접근 불가 (401 Unauthorized)")
+    void todoEndPoint_WithoutAuthentication_ShouldReturn401() throws Exception {
+        mockMvc.perform(get("/api/todos"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("TODO 생성 API도 인증 없이 접근 불가 (401)")
+    void createTodoEndPoint_WithoutAuthentication_ShouldReturn401() throws Exception {
+        String createTodo = """
+                {
+                    "title": "테스트 코드",
+                    "description": "Hello"
+                }
+                """;
+
+        mockMvc.perform(post("/api/todos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createTodo))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("TODO 조회 API도 인증 없이 접근 불가 (401)")
+    void findTodoEndPoint_WithoutAuthentication_ShouldReturn401() throws Exception {
+        mockMvc.perform(get("/api/todos/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("TODO 삭제 API도 인증 없이 접근 불가 (401)")
+    void deleteTodoEndPoint_WithoutAuthentication_ShouldReturn401() throws Exception {
+        mockMvc.perform(delete("/api/todos/1"))
+                .andExpect(status().isUnauthorized());
+    }
+}
+
+
+File: 
+src/test/java/com/todoapp/todo/integration/TodoIntegrationTest.java
+Content: 
+package com.todoapp.todo.integration;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -2371,183 +2280,9 @@ public class TodoIntegrationTest {
 
 
 File: 
-src/test/java/com/todoapp/Integration/UserLoginIntegrationTest.java
+src/test/java/com/todoapp/todo/slice/TodoValidationTest.java
 Content: 
-package com.todoapp.Integration;
-
-import static org.assertj.core.api.Assertions.*;
-
-import com.todoapp.business.service.UserService;
-import com.todoapp.common.exception.InvalidCredentialsException;
-import com.todoapp.dataaccess.repository.UserRepository;
-import com.todoapp.pressentation.dto.request.LoginRequest;
-import com.todoapp.pressentation.dto.request.SignUpRequest;
-import com.todoapp.pressentation.dto.response.LoginResponse;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
-import org.springframework.transaction.annotation.Transactional;
-
-@SpringBootTest
-@Transactional
-public class UserLoginIntegrationTest {
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @BeforeEach
-    void setUp() {
-        SignUpRequest request = SignUpRequest.builder()
-                .email("kss8014@gmail.com")
-                .password("Password123@")
-                .passwordConfirm("Password123@")
-                .name("강두기")
-                .phoneNumber("010-9203-5808")
-                .build();
-
-        userService.signUp(request);
-    }
-
-    @Test
-    @DisplayName("올바른 이메일과 비밀번호로 로그인 성공")
-    void login_WithValidCredentials_Success() {
-        // given
-        LoginRequest request = new LoginRequest("kss8014@gmail.com", "Password123@");
-
-        // when
-        LoginResponse response = userService.login(request);
-
-        // then
-        assertThat(response.getEmail()).isEqualTo("kss8014@gmail.com");
-        assertThat(response.getName()).isEqualTo("강두기");
-        assertThat(response.getMessage()).isEqualTo("로그인에 성공했습니다.");
-    }
-
-    @Test
-    @DisplayName("존재하지 않은 이메일로 로그인 시도 시 실패")
-    void login_WithNonExistentEmail_Fail() {
-        // given
-        LoginRequest request = new LoginRequest("test123@gmail.com", "Password123@");
-
-        // when & then
-        assertThatThrownBy(() -> userService.login(request))
-                .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessageContaining("이메일 또는 비밀번호가 일치하지 않습니다.");
-    }
-
-    @Test
-    @DisplayName("잘못된 비밀번호로 로그인 시도 시 실패")
-    void login_WithWrongPassword_Fail() {
-        // given
-        LoginRequest request = new LoginRequest("kss8014@gmail.com", "TestPassword123@");
-
-        // when & then
-        assertThatThrownBy(() -> userService.login(request))
-                .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessageContaining("이메일 또는 비밀번호가 일치하지 않습니다.");
-    }
-
-    @Test
-    @DisplayName("로그인 성공 후 반환된 userId가 올바른지 확인")
-    void login_Success_ReturnCorrectUserId() {
-        // given
-        LoginRequest request = new LoginRequest("kss8014@gmail.com", "Password123@");
-
-        // when
-        LoginResponse response = userService.login(request);
-
-        assertThat(userRepository.findById(response.getId())).isPresent();
-    }
-}
-
-
-File: 
-src/test/java/com/todoapp/Integration/UserSignUpIntegrationTest.java
-Content: 
-package com.todoapp;
-
-import static org.assertj.core.api.Assertions.*;
-
-import com.todoapp.dataaccess.entity.User;
-import com.todoapp.pressentation.dto.request.SignUpRequest;
-import com.todoapp.dataaccess.repository.UserRepository;
-import com.todoapp.business.service.UserService;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
-
-@SpringBootTest
-@Transactional
-class UserSignUpIntegrationTest {
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private UserService userService;
-
-    @Test
-    @DisplayName("회원가입 성공 테스트")
-    void 회원가입_성공_테스트() {
-        SignUpRequest request = SignUpRequest.builder()
-                .email("test123@gmail.com")
-                .password("Password123!")
-                .passwordConfirm("Password123!")
-                .name("강두기")
-                .phoneNumber("010-1234-1234")
-                .build();
-
-        User user = userService.signUp(request);
-
-        User savedUser = userRepository.findById(user.getId()).orElseThrow();
-        assertThat(savedUser.getName()).isEqualTo("강두기");
-        assertThat(savedUser.getEmail()).isEqualTo("test123@gmail.com");
-
-        assertThat(savedUser.getPassword()).isNotEqualTo("Password123!");
-        assertThat(savedUser.getPassword()).startsWith("$2a$");
-    }
-
-    @Test
-    @DisplayName("회원가입 후 중복 이메일로 재가입 시 실패")
-    void signUp_ThenDuplicateEmail_Fail() {
-        SignUpRequest first = SignUpRequest.builder()
-                .email("test123@gmail.com")
-                .password("Password123!")
-                .passwordConfirm("Password123!")
-                .name("강두기")
-                .phoneNumber("010-1234-1234")
-                .build();
-
-        userService.signUp(first);
-
-        SignUpRequest second = SignUpRequest.builder()
-                .email("test123@gmail.com")
-                .password("Password123!")
-                .passwordConfirm("Password123!")
-                .name("강맑음")
-                .phoneNumber("010-1234-1234")
-                .build();
-
-        assertThatThrownBy(() -> userService.signUp(second))
-                .isInstanceOf(IllegalArgumentException.class);
-
-        assertThat(userRepository.count()).isEqualTo(1);
-    }
-}
-
-
-File: 
-src/test/java/com/todoapp/TodoValidationTest.java
-Content: 
-package com.todoapp;
+package com.todoapp.todo.slice;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -2585,7 +2320,7 @@ public class TodoValidationTest {
         mockMvc.perform(post("/api/todos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("C001"))
                 .andExpect(jsonPath("$.errors.title").exists());
     }
@@ -2609,196 +2344,6 @@ public class TodoValidationTest {
                 .andExpect(jsonPath("$.code").value("C001"))
                 .andExpect(jsonPath("$.errors.title").exists());
 
-    }
-}
-
-
-File: 
-src/test/java/com/todoapp/common/config/SecurityConfigTest.java
-Content: 
-package com.todoapp.common.config;
-
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.todoapp.pressentation.dto.request.TodoCreateRequest;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
-
-@SpringBootTest
-@AutoConfigureMockMvc
-@Transactional
-class SecurityConfigTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Test
-    @DisplayName("회원가입 API는 인증 없이 접근 가능")
-    void signupEndPoint_WithoutAuthentication_ShouldBeAccessible() throws Exception {
-        String body = """
-                {
-                    "email": "test123@gmail.com",
-                    "password": "Password123@",
-                    "passwordConfirm": "Password123@",
-                    "name": "강두기",
-                    "phoneNumber": "010-1234-1234"
-                }
-                """;
-
-        mockMvc.perform(post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isCreated());
-    }
-
-    @Test
-    @DisplayName("로그인 API는 인증 없이 접근 가능")
-    void loginEndPoint_WithoutAuthentication_ShouldBeAccessible() throws Exception {
-        String body = """
-                {
-                    "email": "test123@gmail.com",
-                    "password": "Password123@",
-                    "passwordConfirm": "Password123@",
-                    "name": "강두기",
-                    "phoneNumber": "010-1234-1234"
-                }
-                """;
-
-        mockMvc.perform(post("/api/auth/signup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body));
-
-        String login = """
-                {
-                    "email": "test123@gmail.com",
-                    "password": "Password123@"
-                }
-                """;
-
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(login))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("TODO API 인증 없이 접근 불가 (401 Unauthorized)")
-    void todoEndPoint_WithoutAuthentication_ShouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/todos"))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("TODO 생성 API도 인증 없이 접근 불가 (401)")
-    void createTodoEndPoint_WithoutAuthentication_ShouldReturn401() throws Exception {
-        String createTodo = """
-                {
-                    "title": "테스트 코드",
-                    "description": "Hello"
-                }
-                """;
-
-        mockMvc.perform(post("/api/todos")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(createTodo))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("TODO 조회 API도 인증 없이 접근 불가 (401)")
-    void findTodoEndPoint_WithoutAuthentication_ShouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/todos/1"))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("TODO 삭제 API도 인증 없이 접근 불가 (401)")
-    void deleteTodoEndPoint_WithoutAuthentication_ShouldReturn401() throws Exception {
-        mockMvc.perform(delete("/api/todos/1"))
-                .andExpect(status().isUnauthorized());
-    }
-}
-
-File: 
-src/test/java/com/todoapp/controller/AuthControllerTest.java
-Content: 
-import static org.junit.jupiter.api.Assertions.*;
-class AuthControllerTest {
-  
-}
-
-File: 
-src/test/java/test/ApplicationTests.java
-Content: 
-package test;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-
-@SpringBootTest
-class ApplicationTests {
-
-	@Test
-	void contextLoads() {
-	}
-
-}
-
-
-File: 
-src/test/java/test/TodoValidationTest.java
-Content: 
-package test;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import tools.jackson.databind.ObjectMapper;
-
-@SpringBootTest
-@AutoConfigureMockMvc
-public class TodoValidationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Test
-    @DisplayName("제목이 비어있으면 검증 실패")
-    void createTodo_WithBlankTitle_ShouldFail() throws Exception {
-
-        TodoCreateRequest request = new TodoCreateRequest();
-
-        String requestBody = objectMapper.writeValueAsString(request);
-
-        mockMvc.perform(post("/api/todos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.errors.title").exists());
     }
 }
 

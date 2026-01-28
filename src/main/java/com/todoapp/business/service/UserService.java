@@ -2,6 +2,7 @@ package com.todoapp.business.service;
 
 import com.todoapp.common.exception.InvalidCredentialsException;
 import com.todoapp.common.security.CustomUserDetails;
+import com.todoapp.common.security.JwtTokenProvider;
 import com.todoapp.dataaccess.entity.User;
 import com.todoapp.pressentation.dto.request.LoginRequest;
 import com.todoapp.pressentation.dto.request.SignUpRequest;
@@ -23,6 +24,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public User signUp(SignUpRequest request) {
@@ -62,12 +64,13 @@ public class UserService {
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        return LoginResponse.of(
-                userDetails.getUserId(),
-                userDetails.getEmail(),
-                userDetails.getName()
-        );
+        return LoginResponse.builder()
+                .id(userDetails.getUserId())
+                .email(userDetails.getEmail())
+                .name(userDetails.getName())
+                .accessToken(jwtTokenProvider.generateAccessToken(userDetails.getEmail()))
+                .refreshToken(jwtTokenProvider.generateRefreshToken(userDetails.getEmail()))
+                .message("로그인에 성공했습니다.")
+                .build();
     }
-
-
 }

@@ -19,3 +19,9 @@ spring:
     properties:
       hibernate:
         format_sql: true  # SQL 이쁘게 출력
+
+# JWT 설정 추가 👇
+jwt:
+  secret: your-256-bit-secret-key-change-this-in-production-please-make-it-long-enough-for-hs256-algorithm
+  access-token-expiration: 3600000      # 1시간 (밀리초)
+  refresh-token-expiration: 604800000   # 7일 (밀리초)

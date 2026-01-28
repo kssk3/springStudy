@@ -1,5 +1,6 @@
-package com.todoapp;
+package com.todoapp.todo.slice;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -34,6 +35,7 @@ public class TodoValidationTest {
         String requestBody = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/todos")
+                        .with(user("testUser").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest())
@@ -54,6 +56,7 @@ public class TodoValidationTest {
                 """.formatted(longTitle);
 
         mockMvc.perform(post("/api/todos")
+                        .with(user("testUser").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest())

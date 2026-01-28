@@ -1,4 +1,4 @@
-package com.todoapp;
+package com.todoapp.auth.integration;
 
 import static org.assertj.core.api.Assertions.*;
 

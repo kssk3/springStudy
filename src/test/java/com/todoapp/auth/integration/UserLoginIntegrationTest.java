@@ -1,4 +1,4 @@
-package com.todoapp.Integration;
+package com.todoapp.auth.integration;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
@@ -52,6 +52,10 @@ public class UserLoginIntegrationTest {
         assertThat(response.getEmail()).isEqualTo("kss8014@gmail.com");
         assertThat(response.getName()).isEqualTo("강두기");
         assertThat(response.getMessage()).isEqualTo("로그인에 성공했습니다.");
+
+        // JWT 토큰 검증
+        assertThat(response.getAccessToken()).isNotBlank();
+        assertThat(response.getRefreshToken()).isNotBlank();
     }
 
     @Test
@@ -61,9 +65,12 @@ public class UserLoginIntegrationTest {
         LoginRequest request = new LoginRequest("test123@gmail.com", "Password123@");
 
         // when & then
+        /*
+        * 기존에는 InvalidCredentialException 예외를 던졌으나
+        * Spring Security 도입후 Security 검증후 BadCredentialsException 예외를 던짐
+        */
         assertThatThrownBy(() -> userService.login(request))
-                .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessageContaining("이메일 또는 비밀번호가 일치하지 않습니다.");
+                .isInstanceOf(BadCredentialsException.class);
     }
 
     @Test
@@ -73,9 +80,12 @@ public class UserLoginIntegrationTest {
         LoginRequest request = new LoginRequest("kss8014@gmail.com", "TestPassword123@");
 
         // when & then
+        /*
+         * 기존에는 InvalidCredentialException 예외를 던졌으나
+         * Spring Security 도입후 Security 검증후 BadCredentialsException 예외를 던짐
+         */
         assertThatThrownBy(() -> userService.login(request))
-                .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessageContaining("이메일 또는 비밀번호가 일치하지 않습니다.");
+                .isInstanceOf(BadCredentialsException.class);
     }
 
     @Test
@@ -89,4 +99,15 @@ public class UserLoginIntegrationTest {
 
         assertThat(userRepository.findById(response.getId())).isPresent();
     }
+
+    @Test
+    @DisplayName("Access Token과 Refresh Token은 서로 다름")
+    void login_Success_TokensAreDifferent() {
+        LoginRequest request = new LoginRequest("kss8014@gmail.com", "Password123@");
+
+        LoginResponse response = userService.login(request);
+
+        assertThat(response.getAccessToken()).isNotEqualTo(response.getRefreshToken());
+    }
+
 }
