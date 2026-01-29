@@ -4,6 +4,13 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# .gitignore
+.env
+.env.local
+.env.production
+application-local.yml
+application-prod.yml
+
 # Crev generated files
 .crev-project.txt
 .crev-review.md

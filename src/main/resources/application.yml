@@ -20,8 +20,8 @@ spring:
       hibernate:
         format_sql: true  # SQL 이쁘게 출력
 
-# JWT 설정 추가 👇
+# JWT 설정 (환경변수 또는 Profile별 설정에서 오버라이드)
 jwt:
-  secret: your-256-bit-secret-key-change-this-in-production-please-make-it-long-enough-for-hs256-algorithm
-  access-token-expiration: 3600000      # 1시간 (밀리초)
-  refresh-token-expiration: 604800000   # 7일 (밀리초)
+  secret: ${JWT_SECRET:please-set-jwt-secret-via-environment-variable-or-profile}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000}      # 1시간 (밀리초)
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}   # 7일 (밀리초)

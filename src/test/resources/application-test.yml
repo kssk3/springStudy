@@ -1,0 +1,27 @@
+# 테스트 환경 설정
+# 이 파일은 Git에 커밋 가능 (테스트 전용 시크릿)
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: false  # 테스트에서는 SQL 로그 최소화
+    properties:
+      hibernate:
+        format_sql: true
+
+# 테스트용 JWT 설정
+jwt:
+  secret: test-secret-key-for-automated-testing-only-256-bits-long-hs256-algorithm
+  access-token-expiration: 3600000      # 1시간
+  refresh-token-expiration: 604800000   # 7일
+
+logging:
+  level:
+    com.todoapp: DEBUG
