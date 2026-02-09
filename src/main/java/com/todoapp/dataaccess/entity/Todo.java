@@ -6,6 +6,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,16 +23,10 @@ public class Todo extends BaseTimeEntity {
     private boolean completed;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-
-    public Todo(String title, String description) {
-        this.title = title;
-        this.description = description;
-        this.completed = false;
-    }
-
+    @Builder
     public Todo(String title, String description, User user) {
         this.title = title;
         this.description = description;
@@ -45,5 +40,9 @@ public class Todo extends BaseTimeEntity {
 
     public void updateTitle(String title) {
         this.title = title;
+    }
+
+    public boolean isOwnedBy(Long userId) {
+        return this.user.getId().equals(userId);
     }
 }

@@ -1,7 +1,12 @@
 package com.todoapp.business.service;
 
+import com.todoapp.common.exception.ErrorCode;
+import com.todoapp.common.exception.TodoAccessDeniedException;
+import com.todoapp.common.security.SecurityUtils;
 import com.todoapp.dataaccess.entity.Todo;
+import com.todoapp.dataaccess.entity.User;
 import com.todoapp.dataaccess.repository.TodoRepository;
+import com.todoapp.dataaccess.repository.UserRepository;
 import com.todoapp.pressentation.dto.request.TodoCreateRequest;
 import com.todoapp.pressentation.dto.response.TodoResponse;
 import java.util.List;
@@ -15,37 +20,59 @@ import org.springframework.transaction.annotation.Transactional;
 public class TodoService {
 
     private final TodoRepository todoRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public TodoResponse createTodo(TodoCreateRequest request) {
-        Todo todo = new Todo(request.getTitle(), request.getDescription());
+        long currentUserId = SecurityUtils.getCurrentUserId();
+
+        User user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.TODO_NOT_FOUND.getMessage()));
+
+        Todo todo = Todo.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .user(user)
+                .build();
 
         Todo savedTodo = todoRepository.save(todo);
         return TodoResponse.from(savedTodo);
     }
 
     public TodoResponse findById(Long id) {
-        Todo todo = todoRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Todo not found"));
+        long currentUserId = SecurityUtils.getCurrentUserId();
+
+        Todo todo = todoRepository.findByIdAndUserId(id, currentUserId)
+                .orElseThrow(() -> new TodoAccessDeniedException());
 
         return TodoResponse.from(todo);
     }
-    
+
     public List<TodoResponse> findAll() {
-        return todoRepository.findAll().stream()
+        long currentUserId = SecurityUtils.getCurrentUserId();
+
+        return todoRepository.findByUserId(currentUserId)
+                .stream()
                 .map(TodoResponse::from)
                 .toList();
     }
 
     @Transactional
     public void completeTodo(Long id) {
-        Todo todo = todoRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Todo not found"));
+        long currentUserId = SecurityUtils.getCurrentUserId();
+
+        Todo todo = todoRepository.findByIdAndUserId(id, currentUserId)
+                .orElseThrow(() -> new TodoAccessDeniedException());
 
         todo.complete();
     }
 
     @Transactional
     public void deleteTodo(Long id) {
-        Todo todo = todoRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Todo not found"));
+        long currentUserId = SecurityUtils.getCurrentUserId();
+
+        Todo todo = todoRepository.findByIdAndUserId(id, currentUserId)
+                .orElseThrow(() -> new TodoAccessDeniedException());
 
         todoRepository.delete(todo);
     }
