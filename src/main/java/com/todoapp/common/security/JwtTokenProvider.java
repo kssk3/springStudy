@@ -54,8 +54,6 @@ public class JwtTokenProvider {
 
     /**
      * Refresh Token 생성
-     *
-     * @param email 사용자 이메일
      * @return JWT Refresh Token
      */
     public String generateRefreshToken(String email) {
