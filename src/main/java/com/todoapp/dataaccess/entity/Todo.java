@@ -42,6 +42,10 @@ public class Todo extends BaseTimeEntity {
         this.title = title;
     }
 
+    public void updateDescription(String description) {
+        this.description = description;
+    }
+
     public boolean isOwnedBy(Long userId) {
         return this.user.getId().equals(userId);
     }

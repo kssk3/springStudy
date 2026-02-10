@@ -2,12 +2,14 @@ package com.todoapp.business.service;
 
 import com.todoapp.common.exception.ErrorCode;
 import com.todoapp.common.exception.TodoAccessDeniedException;
+import com.todoapp.common.security.CurrentUserIdProvider;
 import com.todoapp.common.security.SecurityUtils;
 import com.todoapp.dataaccess.entity.Todo;
 import com.todoapp.dataaccess.entity.User;
 import com.todoapp.dataaccess.repository.TodoRepository;
 import com.todoapp.dataaccess.repository.UserRepository;
 import com.todoapp.pressentation.dto.request.TodoCreateRequest;
+import com.todoapp.pressentation.dto.request.UpdateTodoRequest;
 import com.todoapp.pressentation.dto.response.TodoResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +23,11 @@ public class TodoService {
 
     private final TodoRepository todoRepository;
     private final UserRepository userRepository;
+    private final CurrentUserIdProvider currentUserIdProvider;
 
     @Transactional
     public TodoResponse createTodo(TodoCreateRequest request) {
-        long currentUserId = SecurityUtils.getCurrentUserId();
+        long currentUserId = currentUserIdProvider.getCurrentUserId();
 
         User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.TODO_NOT_FOUND.getMessage()));
@@ -39,19 +42,37 @@ public class TodoService {
         return TodoResponse.from(savedTodo);
     }
 
-    public TodoResponse findById(Long id) {
-        long currentUserId = SecurityUtils.getCurrentUserId();
+    @Transactional
+    public TodoResponse updateTodo(Long id, UpdateTodoRequest request) {
+        long currentUserId = currentUserIdProvider.getCurrentUserId();
 
-        Todo todo = todoRepository.findByIdAndUserId(id, currentUserId)
+        Todo todo = todoRepository.findOwnedTodoByIdAndUserId(id, currentUserId)
+                .orElseThrow(() -> new TodoAccessDeniedException());
+
+        if(request.getTitle() != null) {
+            todo.updateTitle(request.getTitle());
+        }
+
+        if(request.getDescription() != null) {
+            todo.updateDescription(request.getDescription());
+        }
+
+        return TodoResponse.from(todo);
+    }
+
+    public TodoResponse findById(Long id) {
+        long currentUserId = currentUserIdProvider.getCurrentUserId();
+
+        Todo todo = todoRepository.findOwnedTodoByIdAndUserId(id, currentUserId)
                 .orElseThrow(() -> new TodoAccessDeniedException());
 
         return TodoResponse.from(todo);
     }
 
     public List<TodoResponse> findAll() {
-        long currentUserId = SecurityUtils.getCurrentUserId();
+        long currentUserId = currentUserIdProvider.getCurrentUserId();
 
-        return todoRepository.findByUserId(currentUserId)
+        return todoRepository.findAllByUserId(currentUserId)
                 .stream()
                 .map(TodoResponse::from)
                 .toList();
@@ -59,9 +80,9 @@ public class TodoService {
 
     @Transactional
     public void completeTodo(Long id) {
-        long currentUserId = SecurityUtils.getCurrentUserId();
+        long currentUserId = currentUserIdProvider.getCurrentUserId();
 
-        Todo todo = todoRepository.findByIdAndUserId(id, currentUserId)
+        Todo todo = todoRepository.findOwnedTodoByIdAndUserId(id, currentUserId)
                 .orElseThrow(() -> new TodoAccessDeniedException());
 
         todo.complete();
@@ -69,9 +90,9 @@ public class TodoService {
 
     @Transactional
     public void deleteTodo(Long id) {
-        long currentUserId = SecurityUtils.getCurrentUserId();
+        long currentUserId = currentUserIdProvider.getCurrentUserId();
 
-        Todo todo = todoRepository.findByIdAndUserId(id, currentUserId)
+        Todo todo = todoRepository.findOwnedTodoByIdAndUserId(id, currentUserId)
                 .orElseThrow(() -> new TodoAccessDeniedException());
 
         todoRepository.delete(todo);
